@@ -39,7 +39,13 @@ Options:
 # Usages
 
 ```bash
+insights <folder contains multiple git dir>
 insights <git dir>
+insights <git dir> --year=2023
+insights <git dir> --author="Duyet Le" --author="Duet"
+insights <git dir> --remap-email="me@duyet.net<=5009534+duyet@users.noreply.github.com" --author="Duet"
+insights <git dir> --remap-ext="js,jsx=>js" --remap-ext "ts<=tsx,tss"
+insights <git dir> --ignore-ext=gitignore
 ```
 
 For example:

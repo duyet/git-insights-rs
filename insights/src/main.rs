@@ -7,7 +7,7 @@ use polars::prelude::*;
 use rayon::prelude::*;
 
 const DEFAULT_REMAP_EXT: [&str; 4] = ["tsx=>ts", "jsx=>js", "htm=>html", "yml=>yaml"];
-const DEFAULT_IGNORE_EXT: [&str; 3] = ["lock", "staging", "local"];
+const DEFAULT_IGNORE_EXT: [&str; 4] = ["lock", "staging", "local", "license"];
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -18,7 +18,7 @@ fn main() -> Result<()> {
 
     // Map result to Vec<Row>
     let rows = result
-        .iter()
+        .par_iter()
         .flat_map(|n| {
             n.stats
                 .par_iter()
