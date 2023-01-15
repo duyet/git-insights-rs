@@ -7,7 +7,7 @@ Date:   Tue, 10 Jan 2023 00:35:39 +0700
     
     chore(deps): update all non-major dependencies
 
-commit 598070021341c247fa041baac291fa1bfa0133b4
+commit 598070021341c247fa041baac291fa1bfa0133b4 (tag: v1)
 Author: Duyet Le <lvduyet@fossil.com>
 Date:   Tue, 9 Aug 2022 19:22:31 +0700
 

@@ -1,14 +1,35 @@
 use clap::Parser;
 
-/// Generate insights reports from git log --numstat output
+/// Parse the git log --numstat output
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 #[clap(arg_required_else_help(true))]
 #[clap(color(clap::ColorChoice::Auto))]
 pub struct Cli {
-    /// Path to the numstat.txt (git log --numstat --date=rfc) file
-    /// Or path to the git repos
+    /// Path to the numstat.txt file
+    /// Or path to the git repo
     pub path: std::path::PathBuf,
+    /// Filtered by year
+    #[arg(short, long)]
+    pub year: Option<u32>,
+    /// Filtered by author(s)
+    #[arg(short, long)]
+    pub author: Vec<String>,
+    /// Filtered by ignore author(s)
+    #[arg(long)]
+    pub ignore_author: Vec<String>,
+    /// Filter out by extensions
+    #[arg(short, long)]
+    pub ignore_ext: Vec<String>,
+    /// Remap the author email. e.g. --remap-email "me@duyet.net<=5009534+duyet@users.noreply.github.com,lvduit08@gmail.com"
+    #[arg(long)]
+    pub remap_email: Vec<String>,
+    /// Remap the author name. e.g. --remap-name "Duyet Le=>Duyet"
+    #[arg(long)]
+    pub remap_name: Vec<String>,
+    /// Remap the extension. e.g. --remap-ext "tsx=>ts"
+    #[arg(long)]
+    pub remap_ext: Vec<String>,
 }
 
 // Parse the command line arguments

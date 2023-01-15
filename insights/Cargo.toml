@@ -6,7 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+numstat_parser = { path = "../numstat-parser" }
 anyhow = "1.0.68"
 chrono = "0.4.23"
 clap = { version = "4.1.1", features = ["derive"] }
+env_logger = "0.10.0"
 regex = "1.7.1"
+polars = { version = "0.26.1", features = ["sql", "lazy", "rows", "is_in"] }
+rayon = "1.6.1"
+log = "0.4.17"

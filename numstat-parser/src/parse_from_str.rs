@@ -1,34 +1,7 @@
 use anyhow::{anyhow, Context, Result};
-use chrono::{DateTime, FixedOffset};
+use chrono::DateTime;
 use log::debug;
 use rayon::prelude::*;
-
-#[derive(Debug, Default)]
-pub struct Author {
-    pub full: String,
-    pub name: String,
-    pub email: String,
-}
-
-#[derive(Debug, Default)]
-pub struct Stat {
-    pub added: u32,
-    pub deleted: u32,
-    pub path: String,
-    pub extension: String,
-}
-
-#[derive(Debug, Default)]
-pub struct Numstat {
-    pub commit: String,
-    pub merges: Vec<String>,
-    pub author: Author,
-    pub date: DateTime<FixedOffset>,
-    pub branches: Vec<String>,
-    pub tags: Vec<String>,
-    pub message: String,
-    pub stats: Vec<Stat>,
-}
 
 /// Parse git log --numstat content
 ///
@@ -52,7 +25,7 @@ pub struct Numstat {
 ///
 /// 2       2       config/app_log/summary.ts
 /// ```
-pub fn numstat(s: &str) -> Result<Vec<Numstat>> {
+pub fn parse_from_str(s: &str) -> Result<Vec<crate::Numstat>> {
     // Split into block of commits
     let blocks = s
         .split("\ncommit ")
@@ -72,9 +45,9 @@ pub fn numstat(s: &str) -> Result<Vec<Numstat>> {
         .collect())
 }
 
-fn parse_block(block: &str) -> Result<Numstat> {
+fn parse_block(block: &str) -> Result<crate::Numstat> {
     let lines = block.lines();
-    let mut numstat = Numstat::default();
+    let mut numstat = crate::Numstat::default();
 
     let default_date = numstat.date;
 
@@ -179,7 +152,7 @@ fn parse_block(block: &str) -> Result<Numstat> {
             // .github/workflows/{ci.yaml => rust-test.yaml}
             let extension = extension.to_lowercase().trim_end_matches('}').to_string();
 
-            let stat = Stat {
+            let stat = crate::numstat::Stat {
                 added,
                 deleted,
                 path,
@@ -273,7 +246,7 @@ mod tests {
             1       4       tests/cli_build.rs
         "};
 
-        let results = numstat(raw).unwrap();
+        let results = parse_from_str(raw).unwrap();
         println!("{:#?}", results);
         assert_eq!(results.len(), 7);
 
