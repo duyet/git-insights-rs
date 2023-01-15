@@ -1,10 +1,9 @@
 # Generate commit insights
 
 [![codecov](https://codecov.io/gh/duyet/git-insights-rs/branch/master/graph/badge.svg?token=VCDqi5hfza)](https://codecov.io/gh/duyet/git-insights-rs)
-[![cargo-clippy](https://github.com/duyet/git-insights-rs/actions/workflows/cargo-clippy.yml/badge.svg)](https://github.com/duyet/athena-rs/actions/workflows/cargo-clippy.yml)
+[![cargo-clippy](https://github.com/duyet/git-insights-rs/actions/workflows/cargo-clippy.yaml/badge.svg)](https://github.com/duyet/git-insights-rs/actions/workflows/cargo-clippy.yaml)
 [![cargo-test](https://github.com/duyet/git-insights-rs/actions/workflows/cargo-test.yaml/badge.svg)](https://github.com/duyet/athena-rs/actions/workflows/cargo-test.yaml)
 [![Code coverage](https://github.com/duyet/git-insights-rs/actions/workflows/cov.yaml/badge.svg)](https://github.com/duyet/athena-rs/actions/workflows/cov.yaml)
-[![cargo-doc](https://github.com/duyet/git-insights-rs/actions/workflows/cargo-doc.yaml/badge.svg)](https://github.com/duyet/athena-rs/actions/workflows/cargo-doc.yaml)
 [![cargo-fmt](https://github.com/duyet/git-insights-rs/actions/workflows/cargo-fmt.yaml/badge.svg)](https://github.com/duyet/athena-rs/actions/workflows/cargo-fmt.yaml)
 
 Generating commit insights from local.

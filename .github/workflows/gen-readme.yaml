@@ -1,0 +1,22 @@
+name: gen-readme
+
+on:
+  push:
+    branches: ['master']
+
+jobs:
+  gen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Generate README.md
+        run: ./gen-readme.sh
+
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: duyetbot
+          author_email: duyetbot@users.noreply.github.com
+          message: 'docs: Generate README.md [skip ci]'
+          add: README.md
