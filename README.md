@@ -16,7 +16,7 @@ Generating commit insights from local.
 $ cargo install --git https://github.com/duyet/git-insights-rs
 $ insights --help
 
-Parse the git log --numstat output
+Parse the output of `git log --numstat --date=rfc`
 
 Usage: insights [OPTIONS] <PATH>
 
@@ -52,7 +52,7 @@ For example:
 
 <!-- BEGIN DEMO -->
 ```bash
-$ git clone $demo_repo $demo_repo_dir
+$ git clone https://github.com/duyet/git-insights-rs /tmp/git-insights-rs
 $ insights $demo_repo_dir
 ```
 
@@ -65,7 +65,7 @@ Commit by authors in 2022: shape: (1, 2)
 │ ---         ┆ ---          │
 │ str         ┆ u32          │
 ╞═════════════╪══════════════╡
-│ Duyet Le    ┆ 27           │
+│ Duyet Le    ┆ 49           │
 └─────────────┴──────────────┘
 
 Commit by author by date in 2022: shape: (1, 3)
@@ -74,7 +74,7 @@ Commit by author by date in 2022: shape: (1, 3)
 │ ---         ┆ ---        ┆ ---    │
 │ str         ┆ str        ┆ u32    │
 ╞═════════════╪════════════╪════════╡
-│ Duyet Le    ┆ 2023-01    ┆ 27     │
+│ Duyet Le    ┆ 2023-01    ┆ 49     │
 └─────────────┴────────────┴────────┘
 
 Total commit by months: shape: (1, 2)
@@ -83,7 +83,7 @@ Total commit by months: shape: (1, 2)
 │ ---        ┆ ---    │
 │ str        ┆ u32    │
 ╞════════════╪════════╡
-│ 2023-01    ┆ 27     │
+│ 2023-01    ┆ 49     │
 └────────────┴────────┘
 
 Commit by author: shape: (1, 2)
@@ -92,7 +92,7 @@ Commit by author: shape: (1, 2)
 │ ---         ┆ ---    │
 │ str         ┆ u32    │
 ╞═════════════╪════════╡
-│ Duyet Le    ┆ 27     │
+│ Duyet Le    ┆ 49     │
 └─────────────┴────────┘
 
 Top languages by commit: shape: (5, 2)
@@ -101,15 +101,15 @@ Top languages by commit: shape: (5, 2)
 │ ---      ┆ ---    │
 │ str      ┆ u32    │
 ╞══════════╪════════╡
-│ rs       ┆ 14     │
+│ rs       ┆ 26     │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ toml     ┆ 6      │
+│ toml     ┆ 8      │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ yaml     ┆ 4      │
+│ yaml     ┆ 6      │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ license  ┆ 1      │
+│ md       ┆ 5      │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ txt      ┆ 1      │
+│ txt      ┆ 2      │
 └──────────┴────────┘
 
 Top commit by day of week: shape: (1, 3)
@@ -118,7 +118,7 @@ Top commit by day of week: shape: (1, 3)
 │ --- ┆ ---         ┆ ---    │
 │ u32 ┆ str         ┆ u32    │
 ╞═════╪═════════════╪════════╡
-│ 7   ┆ Sunday      ┆ 27     │
+│ 7   ┆ Sunday      ┆ 49     │
 └─────┴─────────────┴────────┘
 
 ```
