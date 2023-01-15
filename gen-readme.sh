@@ -25,7 +25,7 @@ END_GEN=$(cat $temp | grep -n '<!-- END DEMO -->' | sed 's/\(.*\):.*/\1/g')
 cat <(head -n $(expr $BEGIN_GEN) $temp)                                            > $temp2
 echo '```bash'                                                                     >> $temp2
 echo '$ git clone https://github.com/duyet/git-insights-rs /tmp/git-insights-rs'   >> $temp2
-echo '$ insights $demo_repo_dir'                                                   >> $temp2
+echo '$ insights /tmp/git-insights-rs'                                             >> $temp2
 echo '```'                                                                         >> $temp2
 echo ''                                                                            >> $temp2
 echo 'Output:'                                                                     >> $temp2

@@ -9,9 +9,9 @@ pub struct Cli {
     /// Path to the numstat.txt file
     /// Or path to the git repo
     pub path: std::path::PathBuf,
-    /// Filtered by year
+    /// Filtered by year. e.g. --year 2022 --year 2023
     #[arg(short, long)]
-    pub year: Option<u32>,
+    pub year: Vec<u32>,
     /// Filtered by author(s)
     #[arg(short, long)]
     pub author: Vec<String>,

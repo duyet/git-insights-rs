@@ -48,7 +48,7 @@ insights <git dir> --remap-ext="js,jsx=>js" --remap-ext "ts<=tsx,tss"
 insights <git dir> --ignore-ext=gitignore
 ```
 
-For example:
+## Example
 
 <!-- BEGIN DEMO -->
 ```bash

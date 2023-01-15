@@ -5,11 +5,15 @@ use numstat_parser::{parse_from_path, Numstat};
 use polars::frame::row::Row;
 use polars::prelude::*;
 use rayon::prelude::*;
+use std::env;
 
 const DEFAULT_REMAP_EXT: [&str; 4] = ["tsx=>ts", "jsx=>js", "htm=>html", "yml=>yaml"];
 const DEFAULT_IGNORE_EXT: [&str; 4] = ["lock", "staging", "local", "license"];
 
 fn main() -> Result<()> {
+    env::set_var("POLARS_FMT_TABLE_HIDE_COLUMN_DATA_TYPES", "1");
+    env::set_var("POLARS_FMT_MAX_ROWS", "20");
+
     env_logger::init();
     let args = cli::parse();
 
@@ -59,21 +63,17 @@ fn main() -> Result<()> {
 
     // Query: How many lines of code were added per author?
     println!(
-        "Commit by authors in 2022: {}\n",
+        "Commit by authors: {}\n",
         preprocess(df.clone(), &args)
             .groupby([col("author_name")])
-            .agg([col("commit").count().alias("commit_count")])
-            .sort_by_exprs(
-                &[col("author_name"), col("commit_count")],
-                [false, false],
-                false
-            )
+            .agg([col("commit").count()])
+            .sort_by_exprs(&[col("commit")], [true], false)
             .collect()?
     );
 
     // Query: Commit by author by date, convert date to YYYY-MM
     println!(
-        "Commit by author by date in 2022: {}\n",
+        "Commit by author by date: {}\n",
         preprocess(df.clone(), &args)
             .groupby([col("author_name"), col("year_month")])
             .agg([col("commit").count()])
@@ -129,8 +129,13 @@ fn preprocess(df: DataFrame, args: &cli::Cli) -> LazyFrame {
         .with_column(col("date").dt().strftime("%Y-%m").alias("year_month"));
 
     // Filter by year
-    let df = if let Some(year) = args.year {
-        df.filter(col("date").dt().year().eq(year))
+    let df = if !args.year.is_empty() {
+        df.filter(
+            col("date")
+                .dt()
+                .year()
+                .is_in(lit(Series::from_iter(args.year.clone()))),
+        )
     } else {
         df
     };
