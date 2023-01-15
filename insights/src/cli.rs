@@ -1,6 +1,6 @@
 use clap::Parser;
 
-/// Parse the git log --numstat output
+/// Parse the output of `git log --numstat --date=rfc`
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 #[clap(arg_required_else_help(true))]

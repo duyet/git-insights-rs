@@ -22,19 +22,19 @@ cat <(tail -n +$(expr $END_GEN) $main)                                  >> $temp
 BEGIN_GEN=$(cat $temp | grep -n '<!-- BEGIN DEMO -->' | sed 's/\(.*\):.*/\1/g')
 END_GEN=$(cat $temp | grep -n '<!-- END DEMO -->' | sed 's/\(.*\):.*/\1/g')
 
-cat <(head -n $(expr $BEGIN_GEN) $temp)                                 > $temp2
-echo '```bash'                                                          >> $temp2
-echo '$ git clone $demo_repo $demo_repo_dir'                            >> $temp2
-echo '$ insights $demo_repo_dir'                                        >> $temp2
-echo '```'                                                              >> $temp2
-echo ''                                                                 >> $temp2
-echo 'Output:'                                                          >> $temp2
-echo ''                                                                 >> $temp2
-echo '```'                                                              >> $temp2
+cat <(head -n $(expr $BEGIN_GEN) $temp)                                            > $temp2
+echo '```bash'                                                                     >> $temp2
+echo '$ git clone https://github.com/duyet/git-insights-rs /tmp/git-insights-rs'   >> $temp2
+echo '$ insights $demo_repo_dir'                                                   >> $temp2
+echo '```'                                                                         >> $temp2
+echo ''                                                                            >> $temp2
+echo 'Output:'                                                                     >> $temp2
+echo ''                                                                            >> $temp2
+echo '```'                                                                         >> $temp2
 git clone $demo_repo $demo_repo_dir &>/dev/null
-cargo run -q -- $demo_repo_dir                                          >> $temp2
-echo '```'                                                              >> $temp2
-cat <(tail -n +$(expr $END_GEN) $temp)                                  >> $temp2
+cargo run -q -- $demo_repo_dir                                                     >> $temp2
+echo '```'                                                                         >> $temp2
+cat <(tail -n +$(expr $END_GEN) $temp)                                             >> $temp2
 
 cat $temp2
 cat $temp2 > $main
