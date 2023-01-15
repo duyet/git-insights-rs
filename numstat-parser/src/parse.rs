@@ -1,5 +1,7 @@
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use chrono::{DateTime, FixedOffset};
+use log::debug;
+use rayon::prelude::*;
 
 #[derive(Debug, Default)]
 pub struct Author {
@@ -50,30 +52,50 @@ pub struct Numstat {
 ///
 /// 2       2       config/app_log/summary.ts
 /// ```
-pub fn numstat(raw: &str) -> Result<Vec<Numstat>> {
-    let cursor = raw.split('\n');
+pub fn numstat(s: &str) -> Result<Vec<Numstat>> {
+    // Split into block of commits
+    let blocks = s
+        .split("\ncommit ")
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| {
+            if s.trim().starts_with("commit ") {
+                s.trim().to_string()
+            } else {
+                format!("commit {}", s.trim())
+            }
+        })
+        .collect::<Vec<String>>();
 
-    let mut results = Vec::new();
+    Ok(blocks
+        .par_iter()
+        .map(|block| parse_block(block).unwrap())
+        .collect())
+}
+
+fn parse_block(block: &str) -> Result<Numstat> {
+    let lines = block.lines();
     let mut numstat = Numstat::default();
 
+    let default_date = numstat.date;
+
     // Parse line by line
-    for line in cursor {
+    for line in lines {
         // Skip empty line
         if line.is_empty() {
             continue;
         }
 
         // Parse commit
-        if line.starts_with("commit") {
-            // Is this a new commit?
-            if !numstat.commit.is_empty() {
-                results.push(numstat);
-                numstat = Numstat::default();
-            }
-
-            // Parse this commit
+        if line.starts_with("commit ") {
             let commit = line.split(' ').nth(1).unwrap();
             numstat.commit = commit.to_string();
+            debug!("commit: {}", commit);
+
+            // Bug
+            if commit.len() < 15 {
+                debug!("{}", block);
+                break;
+            }
 
             // commit bbb7c8e78f07cd06dc015c7139cb174285cd6a8c (tag: v1.0.24+demo, HEAD -> master, origin/master)
             let brand_tag_re = regex::Regex::new(r"\((.+)\)").unwrap();
@@ -111,8 +133,16 @@ pub fn numstat(raw: &str) -> Result<Vec<Numstat>> {
         // Parse date
         let date_re = regex::Regex::new(r"Date:\s+(?P<date>.*)").unwrap();
         if let Some(captures) = date_re.captures(line) {
+            // TODO: there are a bug that the commit message contains `Date: `
+            // To workaround, we will skip if the date is already parsed
+            if numstat.date != default_date {
+                continue;
+            }
+
             let date = captures.name("date").unwrap().as_str().to_string();
+
             numstat.date = DateTime::parse_from_rfc2822(&date)
+                .with_context(|| format!("Parsing block `{}`", block))
                 .with_context(|| format!("Parsing date `{}`", date))?;
             continue;
         }
@@ -161,12 +191,11 @@ pub fn numstat(raw: &str) -> Result<Vec<Numstat>> {
         }
     }
 
-    // Last commit
-    if !numstat.commit.is_empty() {
-        results.push(numstat);
+    if numstat.commit.is_empty() {
+        return Err(anyhow!("cannot parse this block commit: {}", block));
     }
 
-    Ok(results)
+    Ok(numstat)
 }
 
 #[cfg(test)]
