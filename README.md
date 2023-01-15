@@ -24,7 +24,7 @@ Arguments:
   <PATH>  Path to the numstat.txt file Or path to the git repo
 
 Options:
-  -y, --year <YEAR>                    Filtered by year
+  -y, --year <YEAR>                    Filtered by year. e.g. --year 2022 --year 2023
   -a, --author <AUTHOR>                Filtered by author(s)
       --ignore-author <IGNORE_AUTHOR>  Filtered by ignore author(s)
   -i, --ignore-ext <IGNORE_EXT>        Filter out by extensions
@@ -53,61 +53,57 @@ insights <git dir> --ignore-ext=gitignore
 <!-- BEGIN DEMO -->
 ```bash
 $ git clone https://github.com/duyet/git-insights-rs /tmp/git-insights-rs
-$ insights $demo_repo_dir
+$ insights /tmp/git-insights-rs
 ```
 
 Output:
 
 ```
-Commit by authors in 2022: shape: (1, 2)
-┌─────────────┬──────────────┐
-│ author_name ┆ commit_count │
-│ ---         ┆ ---          │
-│ str         ┆ u32          │
-╞═════════════╪══════════════╡
-│ Duyet Le    ┆ 49           │
-└─────────────┴──────────────┘
+Commit by authors: shape: (2, 2)
+┌─────────────┬────────┐
+│ author_name ┆ commit │
+╞═════════════╪════════╡
+│ Duyet Le    ┆ 55     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ duyetbot    ┆ 1      │
+└─────────────┴────────┘
 
-Commit by author by date in 2022: shape: (1, 3)
+Commit by author by date: shape: (2, 3)
 ┌─────────────┬────────────┬────────┐
 │ author_name ┆ year_month ┆ commit │
-│ ---         ┆ ---        ┆ ---    │
-│ str         ┆ str        ┆ u32    │
 ╞═════════════╪════════════╪════════╡
-│ Duyet Le    ┆ 2023-01    ┆ 49     │
+│ Duyet Le    ┆ 2023-01    ┆ 55     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ duyetbot    ┆ 2023-01    ┆ 1      │
 └─────────────┴────────────┴────────┘
 
 Total commit by months: shape: (1, 2)
 ┌────────────┬────────┐
 │ year_month ┆ commit │
-│ ---        ┆ ---    │
-│ str        ┆ u32    │
 ╞════════════╪════════╡
-│ 2023-01    ┆ 49     │
+│ 2023-01    ┆ 56     │
 └────────────┴────────┘
 
-Commit by author: shape: (1, 2)
+Commit by author: shape: (2, 2)
 ┌─────────────┬────────┐
 │ author_name ┆ commit │
-│ ---         ┆ ---    │
-│ str         ┆ u32    │
 ╞═════════════╪════════╡
-│ Duyet Le    ┆ 49     │
+│ Duyet Le    ┆ 55     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ duyetbot    ┆ 1      │
 └─────────────┴────────┘
 
 Top languages by commit: shape: (5, 2)
 ┌──────────┬────────┐
 │ language ┆ commit │
-│ ---      ┆ ---    │
-│ str      ┆ u32    │
 ╞══════════╪════════╡
-│ rs       ┆ 26     │
+│ rs       ┆ 29     │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ toml     ┆ 8      │
+│ toml     ┆ 9      │
+├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ md       ┆ 7      │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
 │ yaml     ┆ 6      │
-├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ md       ┆ 5      │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
 │ txt      ┆ 2      │
 └──────────┴────────┘
@@ -115,10 +111,8 @@ Top languages by commit: shape: (5, 2)
 Top commit by day of week: shape: (1, 3)
 ┌─────┬─────────────┬────────┐
 │ n   ┆ day_of_week ┆ commit │
-│ --- ┆ ---         ┆ ---    │
-│ u32 ┆ str         ┆ u32    │
 ╞═════╪═════════════╪════════╡
-│ 7   ┆ Sunday      ┆ 49     │
+│ 7   ┆ Sunday      ┆ 56     │
 └─────┴─────────────┴────────┘
 
 ```
