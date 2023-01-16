@@ -8,7 +8,7 @@ use clap::Parser;
 pub struct Cli {
     /// Path to the numstat.txt file
     /// Or path to the git repo
-    pub path: std::path::PathBuf,
+    pub path: Vec<std::path::PathBuf>,
     /// Filtered by year. e.g. --year 2022 --year 2023
     #[arg(short, long)]
     pub year: Vec<u32>,

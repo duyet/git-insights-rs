@@ -17,8 +17,8 @@ fn main() -> Result<()> {
     env_logger::init();
     let args = cli::parse();
 
-    let result: Vec<Numstat> = parse_from_path(&args.path)
-        .with_context(|| format!("Parsing from {}", args.path.display()))?;
+    let result: Vec<Numstat> =
+        parse_from_path(&args.path).with_context(|| format!("Parsing from {:?}", args.path))?;
 
     // Map result to Vec<Row>
     let rows = result
