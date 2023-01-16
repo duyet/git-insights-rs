@@ -1,8 +1,10 @@
 name: duyetbot
 
 on:
+  pull_request:
+    types: [opened]
   issue_comment:
-    types: [created]
+    types: [created, edited]
 
 jobs:
   gen:
