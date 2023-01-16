@@ -7,7 +7,8 @@ use clap::Parser;
 #[clap(color(clap::ColorChoice::Auto))]
 pub struct Cli {
     /// Path to the numstat.txt file
-    /// Or path to the git repo
+    /// or path to local/remote the git repo
+    #[arg(required = true)]
     pub path: Vec<std::path::PathBuf>,
     /// Filtered by year. e.g. --year 2022 --year 2023
     #[arg(short, long)]
