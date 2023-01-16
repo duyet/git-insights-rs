@@ -14,5 +14,5 @@ jobs:
 
       - env:
           comment: ${{ github.event.comment.body }}
-        if: ${{ startsWith(env.comment), '@duyetbot' }}
+        if: ${{ startsWith(env.comment, '@duyetbot') }}
         run: ./.github/workflows/duyetbot.sh ${{ env.comment }}
