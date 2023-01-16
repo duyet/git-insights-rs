@@ -18,10 +18,10 @@ $ insights --help
 
 Parse the output of `git log --numstat --date=rfc`
 
-Usage: insights [OPTIONS] <PATH>
+Usage: insights [OPTIONS] <PATH>...
 
 Arguments:
-  <PATH>  Path to the numstat.txt file Or path to the git repo
+  <PATH>...  Path to the numstat.txt file or path to local/remote the git repo
 
 Options:
   -y, --year <YEAR>                    Filtered by year. e.g. --year 2022 --year 2023
@@ -59,60 +59,82 @@ $ insights /tmp/git-insights-rs
 Output:
 
 ```
+Data summary: shape: (5, 10)
+┌────────┬────────┬─────────┬───────────┬────────────┬──────┬─────────┬─────────┬───────┬──────────┐
+│ descri ┆ commit ┆ date    ┆ author_na ┆ author_ema ┆ path ┆ extensi ┆ added   ┆ delet ┆ year_mon │
+│ be     ┆        ┆         ┆ me        ┆ il         ┆      ┆ on      ┆         ┆ ed    ┆ th       │
+╞════════╪════════╪═════════╪═══════════╪════════════╪══════╪═════════╪═════════╪═══════╪══════════╡
+│ count  ┆ 71.0   ┆ 71.0    ┆ 71.0      ┆ 71.0       ┆ 71.0 ┆ 71.0    ┆ 71.0    ┆ 71.0  ┆ 71.0     │
+├╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┤
+│ mean   ┆ null   ┆ null    ┆ null      ┆ null       ┆ null ┆ null    ┆ 27.2112 ┆ 5.225 ┆ null     │
+│        ┆        ┆         ┆           ┆            ┆      ┆         ┆ 68      ┆ 352   ┆          │
+├╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┤
+│ std    ┆ null   ┆ null    ┆ null      ┆ null       ┆ null ┆ null    ┆ 52.1483 ┆ 11.69 ┆ null     │
+│        ┆        ┆         ┆           ┆            ┆      ┆         ┆ 91      ┆ 3951  ┆          │
+├╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┤
+│ min    ┆ null   ┆ 1.6738e ┆ null      ┆ null       ┆ null ┆ null    ┆ 0.0     ┆ 0.0   ┆ null     │
+│        ┆        ┆ 15      ┆           ┆            ┆      ┆         ┆         ┆       ┆          │
+├╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┤
+│ max    ┆ null   ┆ 1.6739e ┆ null      ┆ null       ┆ null ┆ null    ┆ 315.0   ┆ 62.0  ┆ null     │
+│        ┆        ┆ 15      ┆           ┆            ┆      ┆         ┆         ┆       ┆          │
+└────────┴────────┴─────────┴───────────┴────────────┴──────┴─────────┴─────────┴───────┴──────────┘
+
 Commit by authors: shape: (2, 2)
 ┌─────────────┬────────┐
 │ author_name ┆ commit │
 ╞═════════════╪════════╡
-│ Duyet Le    ┆ 55     │
+│ Duyet Le    ┆ 69     │
 ├╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ duyetbot    ┆ 1      │
+│ duyetbot    ┆ 2      │
 └─────────────┴────────┘
 
 Commit by author by date: shape: (2, 3)
 ┌─────────────┬────────────┬────────┐
 │ author_name ┆ year_month ┆ commit │
 ╞═════════════╪════════════╪════════╡
-│ Duyet Le    ┆ 2023-01    ┆ 55     │
+│ Duyet Le    ┆ 2023-01    ┆ 31     │
 ├╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ duyetbot    ┆ 2023-01    ┆ 1      │
+│ duyetbot    ┆ 2023-01    ┆ 2      │
 └─────────────┴────────────┴────────┘
 
 Total commit by months: shape: (1, 2)
 ┌────────────┬────────┐
 │ year_month ┆ commit │
 ╞════════════╪════════╡
-│ 2023-01    ┆ 56     │
+│ 2023-01    ┆ 33     │
 └────────────┴────────┘
 
 Commit by author: shape: (2, 2)
 ┌─────────────┬────────┐
 │ author_name ┆ commit │
 ╞═════════════╪════════╡
-│ Duyet Le    ┆ 55     │
+│ Duyet Le    ┆ 69     │
 ├╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ duyetbot    ┆ 1      │
+│ duyetbot    ┆ 2      │
 └─────────────┴────────┘
 
 Top languages by commit: shape: (5, 2)
 ┌──────────┬────────┐
 │ language ┆ commit │
 ╞══════════╪════════╡
-│ rs       ┆ 29     │
+│ rs       ┆ 38     │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ toml     ┆ 9      │
+│ toml     ┆ 11     │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ md       ┆ 7      │
+│ yaml     ┆ 8      │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ yaml     ┆ 6      │
+│ md       ┆ 8      │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ txt      ┆ 2      │
+│ sh       ┆ 3      │
 └──────────┴────────┘
 
-Top commit by day of week: shape: (1, 3)
+Top commit by day of week: shape: (2, 3)
 ┌─────┬─────────────┬────────┐
 │ n   ┆ day_of_week ┆ commit │
 ╞═════╪═════════════╪════════╡
-│ 7   ┆ Sunday      ┆ 56     │
+│ 1   ┆ Monday      ┆ 14     │
+├╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ 7   ┆ Sunday      ┆ 57     │
 └─────┴─────────────┴────────┘
 
 ```
