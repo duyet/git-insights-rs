@@ -9,10 +9,52 @@ on:
 jobs:
   duyetbot:
     runs-on: ubuntu-latest
+    env:
+      issue_id: ${{ github.event.issue.number }}
+      comment: ${{ github.event.comment.body }}
+      comment_id: ${{ github.event.comment.id }}
+      user_login: ${{ github.event.comment.user.login }}
+      sender: ${{ github.event.sender.login }}
+
     steps:
       - uses: actions/checkout@v3
+      - uses: denoland/setup-deno@v1
 
-      - env:
-          comment: ${{ github.event.comment.body }}
-        if: ${{ startsWith(env.comment), '@duyetbot' }}
+      - if: ${{ startsWith(env.comment, '@duyetbot ') }}
+        id: call_me_babe
+        run: |
+          URL=$(echo ${{ env.comment }} | sed 's/@duyetbot //')
+
+          echo "Validating URL: ${URL}"
+          curl --head --fail ${URL}
+          if [ $? -ne 0 ]; then
+            echo "ok=0" >> $GITHUB_ENV
+            echo "reason=invalid_url" >> $GITHUB_ENV
+          else
+            echo "ok=1" >> $GITHUB_ENV
+            echo "github_url=$URL" >> $GITHUB_ENV
+          fi
+
+      - name: Invalid URL
+        if: ${{ env.ok == "0" && env.reason == "invalid_url" }}
+        uses: jungwinter/comment@v1
+        with:
+          type: create
+          body: 'Hi ${{ env.sender }}, this is invalid: `${{ env.comment }}`'
+          issue_number: ${{ env.issue_id }}
+          token: ${{ secrets.DUYETBOT_TOKEN }}
+
+      - name: Process it
+        if: ${{ env.ok == "1" }}
+        uses: jungwinter/comment@v1
+        id: create
+        with:
+          type: create
+          body: 'Got it ${{ env.sender }}, wait for me to process ${{ env.github_url }} ...'
+          issue_number: ${{ env.issue_id }}
+          token: ${{ secrets.DUYETBOT_TOKEN }}
+
+      - if: ${{ env.ok == "1" }}
         run: ./.github/workflows/duyetbot.sh ${{ env.comment }}
+
+      # Update comments with the output above
