@@ -24,9 +24,6 @@ pub fn clone(url: &str, path: &PathBuf) -> Result<()> {
 }
 
 pub fn get_log(path: &PathBuf) -> Result<String> {
-    // Change current directory to the git repo
-    std::env::set_current_dir(path).context("Failed to change current directory")?;
-
     let cmd = "git log --all --numstat --date=rfc";
 
     debug!("Running {}", cmd);
@@ -91,5 +88,24 @@ mod tests {
         assert!(output.contains("README.md"));
         // Should have at least 1 commit contains `commit` string
         assert!(output.contains("commit"));
+    }
+
+    #[test]
+    fn test_git_log_on_empty_git_folder() {
+        let temp_dir = tempdir().unwrap();
+        let temp_dir_path = temp_dir.path().to_path_buf();
+
+        // Init empty git local repo
+        Command::new("git")
+            .arg("init")
+            .arg(&temp_dir_path)
+            .output()
+            .unwrap();
+
+        // Run git log
+        let output = get_log(&temp_dir_path).unwrap();
+
+        // Check the output
+        assert!(output.is_empty());
     }
 }

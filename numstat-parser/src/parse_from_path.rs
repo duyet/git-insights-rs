@@ -72,8 +72,8 @@ pub fn parse_from_path(paths: &[PathBuf]) -> Result<Vec<crate::Numstat>> {
                 parse_from_path(&[temp_dir_path])
             }
 
-            _ => {
-                bail!("Invalid path");
+            invalid_path => {
+                bail!("Invalid path: {}", invalid_path.display());
             }
         }
     } else {
@@ -91,9 +91,7 @@ pub fn parse_from_path(paths: &[PathBuf]) -> Result<Vec<crate::Numstat>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert_cmd::prelude::*;
     use std::path::Path;
-    use std::process::Command;
     use tempfile::tempdir;
 
     #[test]
@@ -147,7 +145,10 @@ mod tests {
         assert!(out.is_err());
 
         // Check the error message
-        assert_eq!(out.unwrap_err().to_string(), "Invalid path");
+        assert_eq!(
+            out.unwrap_err().to_string(),
+            "Invalid path: tests/not_found.txt"
+        );
     }
 
     #[test]
@@ -156,12 +157,11 @@ mod tests {
         let temp_dir_path = temp_dir.path();
 
         // Run git clone
-        Command::new("git")
-            .arg("clone")
-            .arg("https://github.com/duyet/athena-rs.git")
-            .arg(temp_dir_path)
-            .assert()
-            .success();
+        git::clone(
+            "https://github.com/duyet/athena-rs.git",
+            &temp_dir_path.to_path_buf(),
+        )
+        .expect("failed to clone");
 
         let out = parse_from_path(&[temp_dir_path.to_path_buf()])
             .unwrap_or_else(|_| panic!("could not parse git dir {}", temp_dir_path.display()));
