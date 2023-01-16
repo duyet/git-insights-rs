@@ -13,12 +13,13 @@ const DEFAULT_IGNORE_EXT: [&str; 4] = ["lock", "staging", "local", "license"];
 fn main() -> Result<()> {
     env::set_var("POLARS_FMT_TABLE_HIDE_COLUMN_DATA_TYPES", "1");
     env::set_var("POLARS_FMT_MAX_ROWS", "20");
+    env::set_var("POLARS_FMT_MAX_COLS", "10");
 
     env_logger::init();
     let args = cli::parse();
 
-    let result: Vec<Numstat> = parse_from_path(&args.path)
-        .with_context(|| format!("Parsing from {}", args.path.display()))?;
+    let result: Vec<Numstat> =
+        parse_from_path(&args.path).with_context(|| format!("Parsing from {:?}", args.path))?;
 
     // Map result to Vec<Row>
     let rows = result
@@ -60,6 +61,12 @@ fn main() -> Result<()> {
 
     // Print the DataFrame
     log::debug!("{}\n", preprocess(df.clone(), &args).collect()?);
+
+    // Query: data summary.
+    println!(
+        "Data summary: {}\n",
+        preprocess(df.clone(), &args).collect()?.describe(Some(&[]))
+    );
 
     // Query: How many lines of code were added per author?
     println!(
@@ -127,6 +134,9 @@ fn preprocess(df: DataFrame, args: &cli::Cli) -> LazyFrame {
     let df = df
         .lazy()
         .with_column(col("date").dt().strftime("%Y-%m").alias("year_month"));
+
+    // Drop duplicates
+    let df = df.unique_stable(None, UniqueKeepStrategy::Last);
 
     // Filter by year
     let df = if !args.year.is_empty() {
@@ -200,11 +210,14 @@ fn preprocess(df: DataFrame, args: &cli::Cli) -> LazyFrame {
 
     // Remap the language (extension)
 
-    if !args.remap_ext.is_empty() {
+    let df = if !args.remap_ext.is_empty() {
         modify_column(df, "extension", &args.remap_ext.clone())
     } else {
         df
-    }
+    };
+
+    // Should cache the preprocessed to prevent reprocessing
+    df.cache()
 }
 
 fn modify_column(df: LazyFrame, col_name: &str, from_to: &[String]) -> LazyFrame {

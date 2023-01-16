@@ -6,66 +6,98 @@ use std::path::PathBuf;
 use crate::git;
 use crate::parse_from_str;
 
-pub fn parse_from_path(path: &PathBuf) -> Result<Vec<crate::Numstat>> {
-    match path {
-        path if path.is_dir() => {
-            let dirs = if path.join(".git").exists() {
-                vec![git::get_log(path)?]
-            } else {
-                let git_dirs = std::fs::read_dir(path)?
-                    .filter_map(|entry| {
-                        let path = entry.expect("could not parse path").path();
-                        if path.join(".git").exists() {
-                            Some(path)
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<_>>();
+pub fn parse_from_path(paths: &[PathBuf]) -> Result<Vec<crate::Numstat>> {
+    if paths.len() == 1 {
+        let path = &paths[0];
 
-                git_dirs
-                    .par_iter()
-                    .map(|entry| {
-                        debug!("Running git log on {}", entry.display());
-                        git::get_log(entry).unwrap()
-                    })
-                    .collect()
-            };
+        match path {
+            path if path.is_dir() => {
+                let dirs = if path.join(".git").exists() {
+                    vec![git::get_log(path)?]
+                } else {
+                    let git_dirs = std::fs::read_dir(path)?
+                        .filter_map(|entry| {
+                            let path = entry.expect("could not parse path").path();
+                            if path.join(".git").exists() {
+                                Some(path)
+                            } else {
+                                None
+                            }
+                        })
+                        .collect::<Vec<_>>();
 
-            debug!("Scanned {} git dirs", dirs.len());
+                    git_dirs
+                        .par_iter()
+                        .map(|entry| {
+                            debug!("running git log on {}", entry.display());
+                            git::get_log(entry).unwrap()
+                        })
+                        .collect()
+                };
 
-            if dirs.is_empty() {
-                bail!("No .git found");
+                debug!(
+                    "Scanning `{}`, found {} git dir(s)",
+                    path.display(),
+                    dirs.len()
+                );
+
+                if dirs.is_empty() {
+                    bail!("No .git found");
+                }
+
+                let gitlogs = dirs.join("\n");
+                debug!("Number of gitlog lines: {}", gitlogs.lines().count());
+
+                parse_from_str(&gitlogs)
             }
 
-            let gitlogs = dirs.join("\n");
-            debug!("Number of gitlog lines: {}", gitlogs.lines().count());
+            path if path.is_file() => {
+                // Parse the file, if the argument is a path to a numstat.txt file
+                let output = std::fs::read_to_string(path)?;
+                parse_from_str(&output)
+            }
 
-            parse_from_str(&gitlogs)
+            path if path.to_string_lossy().starts_with("https://github.com") => {
+                // Github URL
+                let url = path.to_string_lossy();
+
+                // Tempdir to clone
+                let temp_dir = tempfile::tempdir()?;
+                let temp_dir_path = temp_dir.path().to_path_buf();
+                debug!("Created tempdir: {}", temp_dir_path.display());
+
+                // Run git clone
+                git::clone(&url, &temp_dir_path)?;
+
+                parse_from_path(&[temp_dir_path])
+            }
+
+            invalid_path => {
+                bail!("Invalid path: {}", invalid_path.display());
+            }
         }
-        path if path.is_file() => {
-            // Parse the file, if the argument is a path to a numstat.txt file
-            let output = std::fs::read_to_string(path).unwrap();
-            parse_from_str(&output)
-        }
-        _ => {
-            bail!("Invalid path");
-        }
+    } else {
+        Ok(paths
+            .par_iter()
+            .flat_map(|path| {
+                parse_from_path(&[path.to_path_buf()]).unwrap_or_else(|e| {
+                    panic!("Failed to parse path: {}, error: {}", path.display(), e)
+                })
+            })
+            .collect::<Vec<crate::Numstat>>())
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert_cmd::prelude::*;
     use std::path::Path;
-    use std::process::Command;
     use tempfile::tempdir;
 
     #[test]
     fn test_parse_from_txt_file() {
         let path = Path::new("tests/sample.txt");
-        let out = parse_from_path(&path.to_path_buf()).unwrap();
+        let out = parse_from_path(&[path.to_path_buf()]).unwrap();
 
         assert_eq!(out.len(), 4);
         assert_eq!(out[0].commit, "1d4171694d9322ab22ee7cdd6712b83ecd8ae6c1");
@@ -109,11 +141,14 @@ mod tests {
     #[test]
     fn parse_from_file_not_found() {
         let path = Path::new("tests/not_found.txt");
-        let out = parse_from_path(&path.to_path_buf());
+        let out = parse_from_path(&[path.to_path_buf()]);
         assert!(out.is_err());
 
         // Check the error message
-        assert_eq!(out.unwrap_err().to_string(), "Invalid path");
+        assert_eq!(
+            out.unwrap_err().to_string(),
+            "Invalid path: tests/not_found.txt"
+        );
     }
 
     #[test]
@@ -122,14 +157,13 @@ mod tests {
         let temp_dir_path = temp_dir.path();
 
         // Run git clone
-        Command::new("git")
-            .arg("clone")
-            .arg("https://github.com/duyet/athena-rs.git")
-            .arg(temp_dir_path)
-            .assert()
-            .success();
+        git::clone(
+            "https://github.com/duyet/athena-rs.git",
+            &temp_dir_path.to_path_buf(),
+        )
+        .expect("failed to clone");
 
-        let out = parse_from_path(&temp_dir_path.to_path_buf())
+        let out = parse_from_path(&[temp_dir_path.to_path_buf()])
             .unwrap_or_else(|_| panic!("could not parse git dir {}", temp_dir_path.display()));
 
         assert!(!out.is_empty());
@@ -146,7 +180,7 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let temp_dir_path = temp_dir.path();
 
-        let out = parse_from_path(&temp_dir_path.to_path_buf());
+        let out = parse_from_path(&[temp_dir_path.to_path_buf()]);
         assert!(out.is_err());
 
         // Error message
