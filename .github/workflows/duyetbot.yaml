@@ -7,18 +7,12 @@ on:
     types: [created, edited]
 
 jobs:
-  gen:
+  duyetbot:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
-      - uses: khan/pull-request-comment-trigger@v1.1.0
-        id: check
-        with:
-          trigger: '@duyetbot'
-        env:
-          GITHUB_TOKEN: '${{ secrets.DUYETBOT_TOKEN }}'
-
-      - name: Run
-        if: steps.check.outputs.triggered == 'true'
-        run: ./.github/workflows/duyetbot.sh ${{ steps.check.outputs.comment_body }}
+      - env:
+          comment: ${{ github.event.comment.body }}
+        if: ${{ startsWith(env.comment), '@duyetbot' }}
+        run: ./.github/workflows/duyetbot.sh ${{ env.comment }}
