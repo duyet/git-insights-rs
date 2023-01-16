@@ -12,7 +12,7 @@ jobs:
     env:
       issue_id: ${{ github.event.issue.number }}
       comment: ${{ github.event.comment.body }}
-      comment_id: ${{ github.event.comment.id }}
+      src_comment_id: ${{ github.event.comment.id }}
       user_login: ${{ github.event.comment.user.login }}
       sender: ${{ github.event.sender.login }}
 
@@ -35,26 +35,59 @@ jobs:
             echo "github_url=$URL" >> $GITHUB_ENV
           fi
 
-      - name: Invalid URL
-        if: ${{ env.ok == "0" && env.reason == "invalid_url" }}
+      - name: Find Comment
+        uses: peter-evans/find-comment@v2
+        if: ${{ env.ok == '1' }}
+        id: fc
+        with:
+          issue-number: ${{ env.issue_id }}
+          comment-author: duyetbot
+          body-includes: "<!-- src_comment_id: ${{ env.src_comment_id }} -->"
+
+      - name: That is invalid URL
+        if: ${{ env.ok == '0' && env.reason == 'invalid_url' }}
         uses: jungwinter/comment@v1
         with:
-          type: create
-          body: 'Hi ${{ env.sender }}, this is invalid: `${{ env.comment }}`'
+          type: ${{ steps.fc.outputs.comment-id == 0 && 'create' || 'edit' }}
+          comment_id: ${{ steps.fc.outputs.comment-id }}
           issue_number: ${{ env.issue_id }}
           token: ${{ secrets.DUYETBOT_TOKEN }}
+          body: |
+            <!-- src_comment_id: ${{ env.src_comment_id }} -->
+            > ${{ env.comment }}
+
+            Hi ${{ env.sender }}, this is invalid: `${{ env.comment }}`
 
       - name: Process it
-        if: ${{ env.ok == "1" }}
+        if: ${{ env.ok == '1' }}
         uses: jungwinter/comment@v1
-        id: create
+        id: comment_process
         with:
-          type: create
-          body: 'Got it ${{ env.sender }}, wait for me to process ${{ env.github_url }} ...'
+          type: ${{ steps.fc.outputs.comment-id == 0 && 'create' || 'edit' }}
+          comment_id: ${{ steps.fc.outputs.comment-id }}
           issue_number: ${{ env.issue_id }}
           token: ${{ secrets.DUYETBOT_TOKEN }}
+          body: |
+            <!-- src_comment_id: ${{ env.src_comment_id }} -->
+            > ${{ env.comment }}
 
-      - if: ${{ env.ok == "1" }}
+            Got it @${{ env.sender }}, please wait for me to process ${{ env.github_url }} ...
+
+      - if: ${{ env.ok == '1' }}
         run: ./.github/workflows/duyetbot.sh ${{ env.comment }}
 
-      # Update comments with the output above
+      - name: Done
+        if: ${{ env.ok == '1' }}
+        uses: jungwinter/comment@v1
+        with:
+          type: edit
+          comment_id: ${{ steps.comment_process.outputs.id }}
+          issue_number: ${{ env.issue_id }}
+          token: ${{ secrets.DUYETBOT_TOKEN }}
+          body: |
+            <!-- src_comment_id: ${{ env.src_comment_id }} -->
+            > ${{ env.comment }}
+
+            ```
+            ${{ env.OUTPUT }}
+            ```
