@@ -13,7 +13,7 @@ jobs:
       issue_id: ${{ github.event.issue.number }}
       comment: ${{ github.event.comment.body }}
       src_comment_id: ${{ github.event.comment.id }}
-      src_comment_url: ${{ github.event.comment.url }}
+      src_comment_url: ${{ github.event.comment.html_url }}
       user_login: ${{ github.event.comment.user.login }}
       sender: ${{ github.event.sender.login }}
 
