@@ -13,6 +13,7 @@ jobs:
       issue_id: ${{ github.event.issue.number }}
       comment: ${{ github.event.comment.body }}
       src_comment_id: ${{ github.event.comment.id }}
+      src_comment_url: ${{ github.event.comment.url }}
       user_login: ${{ github.event.comment.user.login }}
       sender: ${{ github.event.sender.login }}
 
@@ -54,6 +55,8 @@ jobs:
           token: ${{ secrets.DUYETBOT_TOKEN }}
           body: |
             <!-- src_comment_id: ${{ env.src_comment_id }} -->
+            Replied ${{ env.src_comment_url }} to @${{ env.sender }} 
+
             > ${{ env.comment }}
 
             Hi ${{ env.sender }}, this is invalid: `${{ env.comment }}`
@@ -69,6 +72,8 @@ jobs:
           token: ${{ secrets.DUYETBOT_TOKEN }}
           body: |
             <!-- src_comment_id: ${{ env.src_comment_id }} -->
+            Replied ${{ env.src_comment_url }} to @${{ env.sender }} 
+
             > ${{ env.comment }}
 
             Got it @${{ env.sender }}, please wait for me to process ${{ env.github_url }} ...
@@ -86,8 +91,16 @@ jobs:
           token: ${{ secrets.DUYETBOT_TOKEN }}
           body: |
             <!-- src_comment_id: ${{ env.src_comment_id }} -->
+            Replied ${{ env.src_comment_url }} to @${{ env.sender }} 
+
             > ${{ env.comment }}
+
+            <details>
+            <summary>Click to toggle the result</summary>
 
             ```
             ${{ env.OUTPUT }}
             ```
+
+            </details>
+
