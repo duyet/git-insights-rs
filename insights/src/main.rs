@@ -73,7 +73,7 @@ fn main() -> Result<()> {
         "Commit by authors: {}\n",
         preprocess(df.clone(), &args)
             .groupby([col("author_name")])
-            .agg([col("commit").count()])
+            .agg([col("commit").n_unique()])
             .sort_by_exprs(&[col("commit")], [true], false)
             .collect()?
     );
@@ -83,7 +83,7 @@ fn main() -> Result<()> {
         "Commit by author by date: {}\n",
         preprocess(df.clone(), &args)
             .groupby([col("author_name"), col("year_month")])
-            .agg([col("commit").count()])
+            .agg([col("commit").n_unique()])
             .sort_by_exprs(&[col("author_name"), col("commit")], [false, true], false)
             .collect()?
     );
@@ -92,7 +92,7 @@ fn main() -> Result<()> {
         "Total commit by months: {}\n",
         preprocess(df.clone(), &args)
             .groupby([col("year_month")])
-            .agg([col("commit").count()])
+            .agg([col("commit").n_unique()])
             .sort_by_exprs(&[col("year_month")], [false], false)
             .collect()?
     );
@@ -101,7 +101,7 @@ fn main() -> Result<()> {
         "Commit by author: {}\n",
         preprocess(df.clone(), &args)
             .groupby([col("author_name")])
-            .agg([col("commit").count()])
+            .agg([col("commit").n_unique()])
             .sort_by_exprs(&[col("commit")], [true], false)
             .collect()?
     );
@@ -110,7 +110,7 @@ fn main() -> Result<()> {
         "Top languages by commit: {}\n",
         preprocess(df.clone(), &args)
             .groupby([col("extension").alias("language")])
-            .agg([col("commit").count()])
+            .agg([col("commit").n_unique()])
             .sort_by_exprs(&[col("commit")], [true], false)
             .limit(5)
             .collect()?
@@ -122,7 +122,7 @@ fn main() -> Result<()> {
             .with_column(col("date").dt().weekday().alias("n"))
             .with_column(col("date").dt().strftime("%A").alias("day_of_week"))
             .groupby([col("n"), col("day_of_week")])
-            .agg([col("commit").count()])
+            .agg([col("commit").n_unique()])
             .sort_by_exprs(&[col("n")], [false], false)
             .collect()?
     );
