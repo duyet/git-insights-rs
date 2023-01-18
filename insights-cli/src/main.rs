@@ -65,7 +65,17 @@ fn main() -> Result<()> {
     // Query: data summary.
     println!(
         "Data summary: {}\n",
-        preprocess(df.clone(), &args).collect()?.describe(Some(&[]))
+        preprocess(df.clone(), &args)
+            .select([
+                col("author_name").n_unique().alias("author_count"),
+                col("commit").n_unique().alias("commit_count"),
+                col("author_name").list().alias("authors"),
+                col("extension").list().alias("extensions"),
+                col("added").sum(),
+                col("deleted").sum(),
+                col("date").max().alias("last commit")
+            ])
+            .collect()?
     );
 
     // Query: How many lines of code were added per author?
