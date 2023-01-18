@@ -1,2 +1,2 @@
 [workspace]
-members = ['numstat-parser', 'insights']
+members = ['numstat-parser', 'insights-cli']

@@ -15,7 +15,7 @@ fn parse_from_git_folder() {
         .assert()
         .success();
 
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg(temp_dir_path)
         .assert()
         .success()
@@ -27,7 +27,7 @@ fn parse_from_git_folder() {
 
 #[test]
 fn parse_from_github_url() {
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg("https://github.com/duyet/git-insights-rs.git")
         .assert()
         .success()
@@ -39,7 +39,7 @@ fn parse_from_github_url() {
 
 #[test]
 fn parse_from_github_url_with_year() {
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg("https://github.com/duyet/git-insights-rs.git")
         .arg("--year=2023")
         .assert()
@@ -52,7 +52,7 @@ fn parse_from_github_url_with_year() {
 
 #[test]
 fn parse_from_github_url_with_author() {
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg("https://github.com/duyet/git-insights-rs.git")
         .arg("--author=duyetbot")
         .assert()
@@ -64,7 +64,7 @@ fn parse_from_github_url_with_author() {
 
 #[test]
 fn parse_from_github_url_with_ignore_author() {
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg("https://github.com/duyet/git-insights-rs.git")
         .arg("--ignore-author")
         .arg("duyetbot")
@@ -77,14 +77,14 @@ fn parse_from_github_url_with_ignore_author() {
 #[test]
 fn parse_from_github_url_with_ignore_ext() {
     // First: it is containing .yaml file
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg("https://github.com/duyet/git-insights-rs.git")
         .assert()
         .success()
         .stdout(predicates::str::contains("yaml"));
 
     // Ignore --ignore-ext yaml
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg("https://github.com/duyet/git-insights-rs.git")
         .arg("--ignore-ext")
         .arg("yaml")
@@ -95,7 +95,7 @@ fn parse_from_github_url_with_ignore_ext() {
 
 #[test]
 fn parse_from_github_url_with_remap_name() {
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg("https://github.com/duyet/git-insights-rs.git")
         .arg("--remap-name")
         .arg("duyetbot=>duyetsuperbot")
@@ -108,7 +108,7 @@ fn parse_from_github_url_with_remap_name() {
 
 #[test]
 fn parse_from_github_url_with_remap_name_multiple() {
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg("https://github.com/duyet/git-insights-rs.git")
         .arg("--remap-name")
         .arg("duyetbot,duyet=>duyetsuperbot")
@@ -121,7 +121,7 @@ fn parse_from_github_url_with_remap_name_multiple() {
 
 #[test]
 fn parse_from_github_url_with_remap_ext() {
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg("https://github.com/duyet/git-insights-rs.git")
         .arg("--remap-ext")
         .arg("yaml=>lmay")
@@ -130,7 +130,7 @@ fn parse_from_github_url_with_remap_ext() {
         .stdout(predicates::str::contains("yaml").count(0))
         .stdout(predicates::str::contains("lmay"));
 
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg("https://github.com/duyet/git-insights-rs.git")
         .arg("--remap-ext")
         .arg("some_ext<=yaml")
@@ -142,7 +142,7 @@ fn parse_from_github_url_with_remap_ext() {
 
 #[test]
 fn parse_from_github_url_with_remap_ext_multiple() {
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg("https://github.com/duyet/git-insights-rs.git")
         .arg("--remap-ext")
         .arg("yaml,yml=>duet")
@@ -174,7 +174,7 @@ fn parse_from_multiline_git_folders() {
         .assert()
         .success();
 
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg(temp_dir_path)
         .assert()
         .success()
@@ -198,7 +198,7 @@ fn parse_from_multiple_two_local_dirs() {
         .success();
 
     // $ insights /tmp/xxx /tmp/xxx /tmp/xxx
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg(temp_dir_path)
         .arg(temp_dir_path)
         .arg(temp_dir_path)
@@ -226,7 +226,7 @@ fn parse_from_multiple_local_dir_and_remote_url() {
         .success();
 
     // $ insights /tmp/xxx /tmp/xxx /tmp/xxx
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg(temp_dir_path)
         .arg(github_url)
         .assert()
@@ -242,7 +242,7 @@ fn parse_from_multiple_two_remote_urls() {
     let github_url = "https://github.com/duyet/git-insights-rs.git";
 
     // $ insights https://github.com/duyet/git-insights-rs.git https://github.com/duyet/git-insights-rs.git
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg(github_url)
         .arg(github_url)
         .assert()
@@ -259,7 +259,7 @@ fn parse_invalid_git_folder() {
     let temp_dir = tempdir().unwrap();
     let temp_dir_path = temp_dir.path();
 
-    let mut cmd = Command::cargo_bin("insights").unwrap();
+    let mut cmd = Command::cargo_bin("girs").unwrap();
     cmd.arg(temp_dir_path)
         .assert()
         .failure()

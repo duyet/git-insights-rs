@@ -1,5 +1,5 @@
 [package]
-name = "insights"
+name = "girs"
 version = "0.1.0"
 edition = "2021"
 
