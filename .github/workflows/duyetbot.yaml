@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       issue_id: ${{ github.event.issue.number }}
-      comment: ${{ github.event.comment.body }}
+      src_comment: ${{ github.event.comment.body }}
       src_comment_id: ${{ github.event.comment.id }}
       src_comment_url: ${{ github.event.comment.html_url }}
       user_login: ${{ github.event.comment.user.login }}
@@ -21,10 +21,10 @@ jobs:
       - uses: actions/checkout@v3
       - uses: Swatinem/rust-cache@v2
 
-      - if: ${{ startsWith(env.comment, '@duyetbot ') }}
+      - if: ${{ startsWith(env.src_comment, '@duyetbot ') }}
         id: call_me_babe
         run: |
-          URL=$(echo ${{ env.comment }} | sed 's/@duyetbot //')
+          URL=$(echo ${{ env.src_comment }} | sed 's/@duyetbot //')
 
           echo "Validating URL: ${URL}"
           curl --head --fail ${URL}
@@ -57,9 +57,9 @@ jobs:
             <!-- src_comment_id: ${{ env.src_comment_id }} -->
             Replied ${{ env.src_comment_url }} to @${{ env.sender }} 
 
-            > ${{ env.comment }}
+            > ${{ env.src_comment }}
 
-            Hi ${{ env.sender }}, this is invalid: `${{ env.comment }}`
+            Hi ${{ env.sender }}, this is invalid: `${{ env.src_comment }}`
 
       - name: Process it
         if: ${{ env.ok == '1' }}
@@ -74,12 +74,12 @@ jobs:
             <!-- src_comment_id: ${{ env.src_comment_id }} -->
             Replied ${{ env.src_comment_url }} to @${{ env.sender }} 
 
-            > ${{ env.comment }}
+            > ${{ env.src_comment }}
 
             Got it @${{ env.sender }}, please wait for me to process ${{ env.github_url }} ...
 
       - if: ${{ env.ok == '1' }}
-        run: ./.github/workflows/duyetbot.sh ${{ env.comment }}
+        run: ./.github/workflows/duyetbot.sh ${{ env.src_comment }}
 
       - name: Done
         if: ${{ env.ok == '1' }}
@@ -93,7 +93,7 @@ jobs:
             <!-- src_comment_id: ${{ env.src_comment_id }} -->
             Replied ${{ env.src_comment_url }} to @${{ env.sender }} 
 
-            > ${{ env.comment }}
+            > ${{ env.src_comment }}
 
             <details>
             <summary>Click to toggle the result</summary>

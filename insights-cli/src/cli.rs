@@ -3,8 +3,8 @@ use clap::Parser;
 /// Parse the output of `git log --numstat --date=rfc`
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
-#[clap(arg_required_else_help(true))]
-#[clap(color(clap::ColorChoice::Auto))]
+#[command(arg_required_else_help(true))]
+#[command(color(clap::ColorChoice::Auto))]
 pub struct Cli {
     /// Path to the numstat.txt file
     /// or path to local/remote the git repositories.

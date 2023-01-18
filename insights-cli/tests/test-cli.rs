@@ -153,6 +153,19 @@ fn parse_from_github_url_with_remap_ext_multiple() {
 }
 
 #[test]
+fn parse_from_github_url_with_remap_invalid() {
+    let mut cmd = Command::cargo_bin("girs").unwrap();
+    cmd.arg("https://github.com/duyet/git-insights-rs.git")
+        .arg("--remap-ext")
+        .arg("yaml,yml=duet")
+        .arg("--remap-name")
+        .arg("abc")
+        .assert()
+        .failure()
+        .stderr(predicates::str::contains("Invalid remap format"));
+}
+
+#[test]
 fn parse_from_multiline_git_folders() {
     let temp_dir = tempdir().unwrap();
     let temp_dir_path = temp_dir.path();
