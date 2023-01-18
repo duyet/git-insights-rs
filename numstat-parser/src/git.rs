@@ -72,6 +72,22 @@ mod tests {
     }
 
     #[test]
+    fn test_git_clone_invalid_url() {
+        let temp_dir = tempdir().unwrap();
+        let temp_dir_path = temp_dir.path().to_path_buf();
+
+        // Run git clone
+        let result = clone("not-found-for-sure.git", &temp_dir_path);
+
+        // Should return error
+        assert!(result.is_err());
+
+        // Check the console output
+        let error = result.unwrap_err();
+        assert!(error.to_string().contains("Failed to run git clone"));
+    }
+
+    #[test]
     fn test_git_log() {
         let temp_dir = tempdir().unwrap();
         let temp_dir_path = temp_dir.path().to_path_buf();
@@ -107,5 +123,17 @@ mod tests {
 
         // Check the output
         assert!(output.is_empty());
+    }
+
+    #[test]
+    fn test_git_log_on_invalid_git_folder() {
+        let temp_dir = tempdir().unwrap();
+        let temp_dir_path = temp_dir.path().to_path_buf();
+
+        // Run git log
+        let result = get_log(&temp_dir_path);
+
+        // Should return error
+        assert!(result.is_err());
     }
 }

@@ -161,7 +161,7 @@ fn preprocess(df: DataFrame, args: &cli::Cli) -> LazyFrame {
     let df = if !args.ignore_author.is_empty() {
         df.filter(
             col("author_name")
-                .is_in(lit(Series::from_iter(args.author.clone())))
+                .is_in(lit(Series::from_iter(args.ignore_author.clone())))
                 .not(),
         )
     } else {
