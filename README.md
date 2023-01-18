@@ -21,11 +21,11 @@ Parse the output of `git log --numstat --date=rfc`
 Usage: insights [OPTIONS] <PATH>...
 
 Arguments:
-  <PATH>...  Path to the numstat.txt file or path to local/remote the git repo
+  <PATH>...  Path to the numstat.txt file or path to local/remote the git repositories
 
 Options:
-  -y, --year <YEAR>                    Filtered by year. e.g. --year 2022 --year 2023
-  -a, --author <AUTHOR>                Filtered by author(s)
+  -y, --year <YEAR>                    Only including these years. e.g. --year 2022 --year 2023
+  -a, --author <AUTHOR>                Only including these author(s)
       --ignore-author <IGNORE_AUTHOR>  Filtered by ignore author(s)
   -i, --ignore-ext <IGNORE_EXT>        Filter out by extensions
       --remap-email <REMAP_EMAIL>      Remap the author email. e.g. --remap-email "me@duyet.net<=5009534+duyet@users.noreply.github.com,lvduit08@gmail.com"
@@ -64,13 +64,13 @@ Data summary: shape: (5, 10)
 │ descri ┆ commit ┆ date    ┆ author_na ┆ author_ema ┆ path ┆ extensi ┆ added   ┆ delet ┆ year_mon │
 │ be     ┆        ┆         ┆ me        ┆ il         ┆      ┆ on      ┆         ┆ ed    ┆ th       │
 ╞════════╪════════╪═════════╪═══════════╪════════════╪══════╪═════════╪═════════╪═══════╪══════════╡
-│ count  ┆ 86.0   ┆ 86.0    ┆ 86.0      ┆ 86.0       ┆ 86.0 ┆ 86.0    ┆ 86.0    ┆ 86.0  ┆ 86.0     │
+│ count  ┆ 91.0   ┆ 91.0    ┆ 91.0      ┆ 91.0       ┆ 91.0 ┆ 91.0    ┆ 91.0    ┆ 91.0  ┆ 91.0     │
 ├╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┤
-│ mean   ┆ null   ┆ null    ┆ null      ┆ null       ┆ null ┆ null    ┆ 25.5930 ┆ 6.430 ┆ null     │
-│        ┆        ┆         ┆           ┆            ┆      ┆         ┆ 23      ┆ 233   ┆          │
+│ mean   ┆ null   ┆ null    ┆ null      ┆ null       ┆ null ┆ null    ┆ 25.9670 ┆ 6.285 ┆ null     │
+│        ┆        ┆         ┆           ┆            ┆      ┆         ┆ 33      ┆ 714   ┆          │
 ├╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┤
-│ std    ┆ null   ┆ null    ┆ null      ┆ null       ┆ null ┆ null    ┆ 47.8899 ┆ 11.96 ┆ null     │
-│        ┆        ┆         ┆           ┆            ┆      ┆         ┆ 17      ┆ 1252  ┆          │
+│ std    ┆ null   ┆ null    ┆ null      ┆ null       ┆ null ┆ null    ┆ 47.6278 ┆ 11.71 ┆ null     │
+│        ┆        ┆         ┆           ┆            ┆      ┆         ┆ 28      ┆ 7305  ┆          │
 ├╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌┤
 │ min    ┆ null   ┆ 1.6738e ┆ null      ┆ null       ┆ null ┆ null    ┆ 0.0     ┆ 0.0   ┆ null     │
 │        ┆        ┆ 15      ┆           ┆            ┆      ┆         ┆         ┆       ┆          │
@@ -83,58 +83,60 @@ Commit by authors: shape: (2, 2)
 ┌─────────────┬────────┐
 │ author_name ┆ commit │
 ╞═════════════╪════════╡
-│ Duyet Le    ┆ 23     │
+│ Duyet Le    ┆ 24     │
 ├╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ duyetbot    ┆ 8      │
+│ duyetbot    ┆ 9      │
 └─────────────┴────────┘
 
 Commit by author by date: shape: (2, 3)
 ┌─────────────┬────────────┬────────┐
 │ author_name ┆ year_month ┆ commit │
 ╞═════════════╪════════════╪════════╡
-│ Duyet Le    ┆ 2023-01    ┆ 23     │
+│ Duyet Le    ┆ 2023-01    ┆ 24     │
 ├╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ duyetbot    ┆ 2023-01    ┆ 8      │
+│ duyetbot    ┆ 2023-01    ┆ 9      │
 └─────────────┴────────────┴────────┘
 
 Total commit by months: shape: (1, 2)
 ┌────────────┬────────┐
 │ year_month ┆ commit │
 ╞════════════╪════════╡
-│ 2023-01    ┆ 31     │
+│ 2023-01    ┆ 33     │
 └────────────┴────────┘
 
 Commit by author: shape: (2, 2)
 ┌─────────────┬────────┐
 │ author_name ┆ commit │
 ╞═════════════╪════════╡
-│ Duyet Le    ┆ 23     │
+│ Duyet Le    ┆ 24     │
 ├╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ duyetbot    ┆ 8      │
+│ duyetbot    ┆ 9      │
 └─────────────┴────────┘
 
 Top languages by commit: shape: (5, 2)
 ┌──────────┬────────┐
 │ language ┆ commit │
 ╞══════════╪════════╡
-│ md       ┆ 14     │
+│ md       ┆ 15     │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
 │ yaml     ┆ 12     │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ rs       ┆ 10     │
+│ rs       ┆ 11     │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
 │ toml     ┆ 6      │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
 │ sh       ┆ 3      │
 └──────────┴────────┘
 
-Top commit by day of week: shape: (3, 3)
+Top commit by day of week: shape: (4, 3)
 ┌─────┬─────────────┬────────┐
 │ n   ┆ day_of_week ┆ commit │
 ╞═════╪═════════════╪════════╡
 │ 1   ┆ Monday      ┆ 12     │
 ├╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ 2   ┆ Tuesday     ┆ 7      │
+│ 2   ┆ Tuesday     ┆ 8      │
+├╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ 3   ┆ Wednesday   ┆ 1      │
 ├╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
 │ 7   ┆ Sunday      ┆ 12     │
 └─────┴─────────────┴────────┘
