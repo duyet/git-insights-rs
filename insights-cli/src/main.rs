@@ -1,14 +1,26 @@
 mod cli;
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use numstat_parser::{parse_from_path, Numstat};
 use polars::frame::row::Row;
 use polars::prelude::*;
 use rayon::prelude::*;
+use std::collections::{BTreeMap, HashMap};
 use std::env;
 
 const DEFAULT_REMAP_EXT: [&str; 4] = ["tsx=>ts", "jsx=>js", "htm=>html", "yml=>yaml"];
 const DEFAULT_IGNORE_EXT: [&str; 4] = ["lock", "staging", "local", "license"];
+
+lazy_static::lazy_static! {
+    static ref HEADING: HashMap<&'static str, &'static str> = HashMap::from_iter([
+        ("summary", "Summary"),
+        ("commit_by_month", "Commit by month"),
+        ("commit_by_author", "Commit by author"),
+        ("commit_by_weekday", "Commit by weekday"),
+        ("commit_by_author_by_month", "Commit by author by month"),
+        ("top_languages", "Top languages"),
+    ]);
+}
 
 fn main() -> Result<()> {
     env::set_var("POLARS_FMT_TABLE_HIDE_COLUMN_DATA_TYPES", "1");
@@ -62,9 +74,11 @@ fn main() -> Result<()> {
     // Print the DataFrame
     log::debug!("{}\n", preprocess(df.clone(), &args).collect()?);
 
+    let mut query: BTreeMap<&str, DataFrame> = BTreeMap::new();
+
     // Query: data summary.
-    println!(
-        "Data summary: {}\n",
+    query.insert(
+        "summary",
         preprocess(df.clone(), &args)
             .select([
                 col("author_name").n_unique().alias("author_count"),
@@ -73,69 +87,101 @@ fn main() -> Result<()> {
                 col("extension").list().alias("extensions"),
                 col("added").sum(),
                 col("deleted").sum(),
-                col("date").max().alias("last commit")
+                col("date").max().alias("last commit"),
             ])
-            .collect()?
+            .collect()?,
     );
 
     // Query: How many lines of code were added per author?
-    println!(
-        "Commit by authors: {}\n",
+    query.insert(
+        "commit_by_author",
         preprocess(df.clone(), &args)
             .groupby([col("author_name")])
             .agg([col("commit").n_unique()])
             .sort_by_exprs(&[col("commit")], [true], false)
-            .collect()?
+            .collect()?,
     );
 
-    // Query: Commit by author by date, convert date to YYYY-MM
-    println!(
-        "Commit by author by date: {}\n",
-        preprocess(df.clone(), &args)
-            .groupby([col("author_name"), col("year_month")])
-            .agg([col("commit").n_unique()])
-            .sort_by_exprs(&[col("author_name"), col("commit")], [false, true], false)
-            .collect()?
-    );
-
-    println!(
-        "Total commit by months: {}\n",
+    // Query: Total commits by month
+    query.insert(
+        "commit_by_month",
         preprocess(df.clone(), &args)
             .groupby([col("year_month")])
             .agg([col("commit").n_unique()])
             .sort_by_exprs(&[col("year_month")], [false], false)
-            .collect()?
+            .collect()?,
     );
 
-    println!(
-        "Commit by author: {}\n",
+    // Query: Commit by author by date, convert date to YYYY-MM
+    query.insert(
+        "commit_by_author_by_month",
         preprocess(df.clone(), &args)
-            .groupby([col("author_name")])
+            .groupby([col("author_name"), col("year_month")])
             .agg([col("commit").n_unique()])
-            .sort_by_exprs(&[col("commit")], [true], false)
-            .collect()?
+            .sort_by_exprs(&[col("author_name"), col("commit")], [false, true], false)
+            .collect()?,
     );
-
-    println!(
-        "Top languages by commit: {}\n",
+    // Query: Top languages
+    query.insert(
+        "top_languages",
         preprocess(df.clone(), &args)
             .groupby([col("extension").alias("language")])
             .agg([col("commit").n_unique()])
             .sort_by_exprs(&[col("commit")], [true], false)
             .limit(5)
-            .collect()?
+            .collect()?,
     );
 
-    println!(
-        "Top commit by day of week: {}\n",
+    // Query: Top commit by weekday
+    query.insert(
+        "commit_by_weekday",
         preprocess(df.clone(), &args)
             .with_column(col("date").dt().weekday().alias("n"))
-            .with_column(col("date").dt().strftime("%A").alias("day_of_week"))
-            .groupby([col("n"), col("day_of_week")])
+            .with_column(col("date").dt().strftime("%A").alias("weekday"))
+            .groupby([col("n"), col("weekday")])
             .agg([col("commit").n_unique()])
             .sort_by_exprs(&[col("n")], [false], false)
-            .collect()?
+            .collect()?,
     );
+
+    match args.output {
+        cli::Output::None => {
+            for (k, v) in query {
+                println!("{}: {}\n", HEADING.get(&k).unwrap_or(&k), v)
+            }
+        }
+        cli::Output::Json => {
+            use serde_json::{json, to_value, Value};
+
+            let values = to_value(&query)?;
+            let mut out = json!({});
+
+            for (k, v) in values.as_object().unwrap().iter() {
+                let mut cols = json!({});
+
+                for col in v["columns"].as_array().unwrap().iter() {
+                    let key = col["name"].as_str().unwrap();
+
+                    let values = match col["values"].as_array().unwrap() {
+                        values if values[0].is_object() => values
+                            .iter()
+                            .map(|v| v["values"].clone())
+                            .collect::<Vec<Value>>(),
+                        values => values.to_vec(),
+                    };
+
+                    cols[key] = Value::Array(values);
+                }
+
+                out[k] = serde_json::to_value(cols)?;
+            }
+
+            println!("{:#}", out);
+        }
+        _ => {
+            bail!("Not implemented yet.");
+        }
+    }
 
     Ok(())
 }

@@ -19,10 +19,23 @@ fn parse_from_git_folder() {
     cmd.arg(temp_dir_path)
         .assert()
         .success()
-        .stdout(predicates::str::contains("Commit by authors"))
+        .stdout(predicates::str::contains("Commit by author"))
         .stdout(predicates::str::contains("Duyet Le"))
         .stdout(predicates::str::contains("language"))
         .stdout(predicates::str::contains("rs"));
+}
+
+#[test]
+fn parse_invalid_git_folder() {
+    // Create empty folder
+    let temp_dir = tempdir().unwrap();
+    let temp_dir_path = temp_dir.path();
+
+    let mut cmd = Command::cargo_bin("girs").unwrap();
+    cmd.arg(temp_dir_path)
+        .assert()
+        .failure()
+        .stderr(predicates::str::contains("No .git found"));
 }
 
 #[test]
@@ -31,7 +44,7 @@ fn parse_from_github_url() {
     cmd.arg("https://github.com/duyet/git-insights-rs.git")
         .assert()
         .success()
-        .stdout(predicates::str::contains("Commit by authors"))
+        .stdout(predicates::str::contains("Commit by author"))
         .stdout(predicates::str::contains("Duyet Le"))
         .stdout(predicates::str::contains("language"))
         .stdout(predicates::str::contains("rs"));
@@ -44,7 +57,7 @@ fn parse_from_github_url_with_year() {
         .arg("--year=2023")
         .assert()
         .success()
-        .stdout(predicates::str::contains("Commit by authors"))
+        .stdout(predicates::str::contains("Commit by author"))
         .stdout(predicates::str::contains("Duyet Le"))
         .stdout(predicates::str::contains("language"))
         .stdout(predicates::str::contains("rs"));
@@ -57,7 +70,7 @@ fn parse_from_github_url_with_author() {
         .arg("--author=duyetbot")
         .assert()
         .success()
-        .stdout(predicates::str::contains("Commit by authors"))
+        .stdout(predicates::str::contains("Commit by author"))
         .stdout(predicates::str::contains("duyetbot"))
         .stdout(predicates::str::contains("Duyet Le").count(0));
 }
@@ -70,7 +83,7 @@ fn parse_from_github_url_with_ignore_author() {
         .arg("duyetbot")
         .assert()
         .success()
-        .stdout(predicates::str::contains("Commit by authors"))
+        .stdout(predicates::str::contains("Commit by author"))
         .stdout(predicates::str::contains("duyetbot").count(0));
 }
 
@@ -101,7 +114,7 @@ fn parse_from_github_url_with_remap_name() {
         .arg("duyetbot=>duyetsuperbot")
         .assert()
         .success()
-        .stdout(predicates::str::contains("Commit by authors"))
+        .stdout(predicates::str::contains("Commit by author"))
         .stdout(predicates::str::contains("duyetbot").count(0))
         .stdout(predicates::str::contains("duyetsuperbot"));
 
@@ -111,7 +124,7 @@ fn parse_from_github_url_with_remap_name() {
         .arg("duyetsuperbot<=duyetbot")
         .assert()
         .success()
-        .stdout(predicates::str::contains("Commit by authors"))
+        .stdout(predicates::str::contains("Commit by author"))
         .stdout(predicates::str::contains("duyetbot").count(0))
         .stdout(predicates::str::contains("duyetsuperbot"));
 }
@@ -124,7 +137,7 @@ fn parse_from_github_url_with_remap_name_multiple() {
         .arg("duyetbot,duyet=>duyetsuperbot")
         .assert()
         .success()
-        .stdout(predicates::str::contains("Commit by authors"))
+        .stdout(predicates::str::contains("Commit by author"))
         .stdout(predicates::str::contains("duyetbot").count(0))
         .stdout(predicates::str::contains("duyetsuperbot"));
 }
@@ -245,7 +258,7 @@ fn parse_from_multiline_git_folders() {
     cmd.arg(temp_dir_path)
         .assert()
         .success()
-        .stdout(predicates::str::contains("Commit by authors"))
+        .stdout(predicates::str::contains("Commit by author"))
         .stdout(predicates::str::contains("Duyet Le"))
         .stdout(predicates::str::contains("language"))
         .stdout(predicates::str::contains("rs"));
@@ -271,7 +284,7 @@ fn parse_from_multiple_two_local_dirs() {
         .arg(temp_dir_path)
         .assert()
         .success()
-        .stdout(predicates::str::contains("Commit by authors"))
+        .stdout(predicates::str::contains("Commit by author"))
         .stdout(predicates::str::contains("Duyet Le"))
         .stdout(predicates::str::contains("language"))
         .stdout(predicates::str::contains("rs"));
@@ -298,7 +311,7 @@ fn parse_from_multiple_local_dir_and_remote_url() {
         .arg(github_url)
         .assert()
         .success()
-        .stdout(predicates::str::contains("Commit by authors"))
+        .stdout(predicates::str::contains("Commit by author"))
         .stdout(predicates::str::contains("Duyet Le"))
         .stdout(predicates::str::contains("language"))
         .stdout(predicates::str::contains("rs"));
@@ -314,21 +327,45 @@ fn parse_from_multiple_two_remote_urls() {
         .arg(github_url)
         .assert()
         .success()
-        .stdout(predicates::str::contains("Commit by authors"))
+        .stdout(predicates::str::contains("Commit by author"))
         .stdout(predicates::str::contains("Duyet Le"))
         .stdout(predicates::str::contains("language"))
         .stdout(predicates::str::contains("rs"));
 }
 
 #[test]
-fn parse_invalid_git_folder() {
-    // Create empty folder
-    let temp_dir = tempdir().unwrap();
-    let temp_dir_path = temp_dir.path();
+fn output_json() {
+    let github_url = "https://github.com/duyet/git-insights-rs.git";
 
+    // $ insights https://github.com/duyet/git-insights-rs.git https://github.com/duyet/git-insights-rs.git
     let mut cmd = Command::cargo_bin("girs").unwrap();
-    cmd.arg(temp_dir_path)
+    let out = cmd.arg(github_url).arg("--output=json").assert().success();
+
+    // Get stdout
+    let out = &out.get_output().stdout;
+
+    // Parse json
+    let json: serde_json::Value =
+        serde_json::from_slice(out).expect("could not parse the output as json");
+    println!("{:#}", json);
+
+    // Check json
+    assert!(!json["commit_by_author"].as_object().unwrap().is_empty());
+    assert!(!json["commit_by_author"]["author_name"]
+        .as_array()
+        .unwrap()
+        .is_empty());
+}
+
+#[test]
+fn output_html() {
+    let github_url = "https://github.com/duyet/git-insights-rs.git";
+
+    // $ insights https://github.com/duyet/git-insights-rs.git https://github.com/duyet/git-insights-rs.git
+    let mut cmd = Command::cargo_bin("girs").unwrap();
+    cmd.arg(github_url)
+        .arg("--output=html")
         .assert()
         .failure()
-        .stderr(predicates::str::contains("No .git found"));
+        .stderr(predicates::str::contains("Not implemented yet"));
 }
