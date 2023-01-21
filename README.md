@@ -31,6 +31,7 @@ Options:
       --remap-email <REMAP_EMAIL>      Remap the author email. e.g. --remap-email "me@duyet.net<=5009534+duyet@users.noreply.github.com,lvduit08@gmail.com"
       --remap-name <REMAP_NAME>        Remap the author name. e.g. --remap-name "Duyet Le=>Duyet"
       --remap-ext <REMAP_EXT>          Remap the extension. e.g. --remap-ext "tsx=>ts"
+  -o, --output <OUTPUT>                Output format [default: none] [possible values: none, json, html]
   -h, --help                           Print help
   -V, --version                        Print version
 ```
@@ -59,76 +60,69 @@ $ insights /tmp/git-insights-rs
 Output:
 
 ```
-Data summary: shape: (1, 7)
-┌──────────────┬──────────────┬──────────────────┬─────────────────┬───────┬─────────┬─────────────┐
-│ author_count ┆ commit_count ┆ authors          ┆ extensions      ┆ added ┆ deleted ┆ last commit │
-╞══════════════╪══════════════╪══════════════════╪═════════════════╪═══════╪═════════╪═════════════╡
-│ 2            ┆ 39           ┆ ["Duyet Le",     ┆ ["yaml", "rs",  ┆ 2526  ┆ 704     ┆ 2023-01-18  │
-│              ┆              ┆ "Duyet Le", ...  ┆ ...             ┆       ┆         ┆ 08:12:15    │
-│              ┆              ┆ "Du...           ┆ "gitignore"]    ┆       ┆         ┆             │
-└──────────────┴──────────────┴──────────────────┴─────────────────┴───────┴─────────┴─────────────┘
-
-Commit by authors: shape: (2, 2)
-┌─────────────┬────────┐
-│ author_name ┆ commit │
-╞═════════════╪════════╡
-│ Duyet Le    ┆ 27     │
-├╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ duyetbot    ┆ 12     │
-└─────────────┴────────┘
-
-Commit by author by date: shape: (2, 3)
-┌─────────────┬────────────┬────────┐
-│ author_name ┆ year_month ┆ commit │
-╞═════════════╪════════════╪════════╡
-│ Duyet Le    ┆ 2023-01    ┆ 27     │
-├╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ duyetbot    ┆ 2023-01    ┆ 12     │
-└─────────────┴────────────┴────────┘
-
-Total commit by months: shape: (1, 2)
-┌────────────┬────────┐
-│ year_month ┆ commit │
-╞════════════╪════════╡
-│ 2023-01    ┆ 39     │
-└────────────┴────────┘
-
 Commit by author: shape: (2, 2)
 ┌─────────────┬────────┐
 │ author_name ┆ commit │
 ╞═════════════╪════════╡
-│ Duyet Le    ┆ 27     │
+│ Duyet Le    ┆ 30     │
 ├╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ duyetbot    ┆ 12     │
+│ duyetbot    ┆ 13     │
 └─────────────┴────────┘
 
-Top languages by commit: shape: (5, 2)
+Commit by author by month: shape: (2, 3)
+┌─────────────┬────────────┬────────┐
+│ author_name ┆ year_month ┆ commit │
+╞═════════════╪════════════╪════════╡
+│ Duyet Le    ┆ 2023-01    ┆ 30     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ duyetbot    ┆ 2023-01    ┆ 13     │
+└─────────────┴────────────┴────────┘
+
+Commit by month: shape: (1, 2)
+┌────────────┬────────┐
+│ year_month ┆ commit │
+╞════════════╪════════╡
+│ 2023-01    ┆ 43     │
+└────────────┴────────┘
+
+Commit by weekday: shape: (5, 3)
+┌─────┬───────────┬────────┐
+│ n   ┆ weekday   ┆ commit │
+╞═════╪═══════════╪════════╡
+│ 1   ┆ Monday    ┆ 12     │
+├╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ 2   ┆ Tuesday   ┆ 8      │
+├╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ 3   ┆ Wednesday ┆ 8      │
+├╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ 6   ┆ Saturday  ┆ 3      │
+├╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ 7   ┆ Sunday    ┆ 12     │
+└─────┴───────────┴────────┘
+
+Summary: shape: (1, 7)
+┌──────────────┬──────────────┬──────────────────┬─────────────────┬───────┬─────────┬─────────────┐
+│ author_count ┆ commit_count ┆ authors          ┆ extensions      ┆ added ┆ deleted ┆ last commit │
+╞══════════════╪══════════════╪══════════════════╪═════════════════╪═══════╪═════════╪═════════════╡
+│ 2            ┆ 43           ┆ ["Duyet Le",     ┆ ["toml", "rs",  ┆ 3292  ┆ 1302    ┆ 2023-01-21  │
+│              ┆              ┆ "Duyet Le", ...  ┆ ...             ┆       ┆         ┆ 15:30:39    │
+│              ┆              ┆ "Du...           ┆ "gitignore"]    ┆       ┆         ┆             │
+└──────────────┴──────────────┴──────────────────┴─────────────────┴───────┴─────────┴─────────────┘
+
+Top languages: shape: (5, 2)
 ┌──────────┬────────┐
 │ language ┆ commit │
 ╞══════════╪════════╡
-│ md       ┆ 19     │
+│ md       ┆ 20     │
+├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
+│ rs       ┆ 16     │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
 │ yaml     ┆ 14     │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ rs       ┆ 13     │
-├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ toml     ┆ 7      │
+│ toml     ┆ 9      │
 ├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
 │ sh       ┆ 3      │
 └──────────┴────────┘
-
-Top commit by day of week: shape: (4, 3)
-┌─────┬─────────────┬────────┐
-│ n   ┆ day_of_week ┆ commit │
-╞═════╪═════════════╪════════╡
-│ 1   ┆ Monday      ┆ 12     │
-├╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ 2   ┆ Tuesday     ┆ 8      │
-├╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ 3   ┆ Wednesday   ┆ 7      │
-├╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┤
-│ 7   ┆ Sunday      ┆ 12     │
-└─────┴─────────────┴────────┘
 
 ```
 <!-- END DEMO -->
