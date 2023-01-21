@@ -104,6 +104,16 @@ fn parse_from_github_url_with_remap_name() {
         .stdout(predicates::str::contains("Commit by authors"))
         .stdout(predicates::str::contains("duyetbot").count(0))
         .stdout(predicates::str::contains("duyetsuperbot"));
+
+    let mut cmd = Command::cargo_bin("girs").unwrap();
+    cmd.arg("https://github.com/duyet/git-insights-rs.git")
+        .arg("--remap-name")
+        .arg("duyetsuperbot<=duyetbot")
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("Commit by authors"))
+        .stdout(predicates::str::contains("duyetbot").count(0))
+        .stdout(predicates::str::contains("duyetsuperbot"));
 }
 
 #[test]
@@ -163,6 +173,50 @@ fn parse_from_github_url_with_remap_invalid() {
         .assert()
         .failure()
         .stderr(predicates::str::contains("Invalid remap format"));
+}
+
+#[test]
+fn parse_from_github_url_with_remap_email() {
+    let github_url = "https://github.com/duyet/git-insights-rs.git";
+
+    // $ insights https://github.com/duyet/git-insights-rs.git --remap-email lvduit08@gmail.com=>me@duyet.net
+    let mut cmd = Command::cargo_bin("girs").unwrap();
+    cmd.arg(github_url)
+        .arg(github_url)
+        .arg("--remap-email")
+        .arg("lvduit08@gmail.com=>me@duyet.net")
+        .assert()
+        .success();
+
+    let mut cmd = Command::cargo_bin("girs").unwrap();
+    cmd.arg(github_url)
+        .arg(github_url)
+        .arg("--remap-email")
+        .arg("lvduit08@gmail.com<=me@duyet.net")
+        .assert()
+        .success();
+}
+
+#[test]
+fn parse_from_github_url_with_remap_email_multiple() {
+    let github_url = "https://github.com/duyet/git-insights-rs.git";
+
+    // $ insights https://github.com/duyet/git-insights-rs.git --remap-email lvduit08@gmail.com=>me@duyet.net
+    let mut cmd = Command::cargo_bin("girs").unwrap();
+    cmd.arg(github_url)
+        .arg(github_url)
+        .arg("--remap-email")
+        .arg("lvduit08@gmail.com,abc@gmail.com=>me@duyet.net")
+        .assert()
+        .success();
+
+    let mut cmd = Command::cargo_bin("girs").unwrap();
+    cmd.arg(github_url)
+        .arg(github_url)
+        .arg("--remap-email")
+        .arg("lvduit08@gmail.com<=me@duyet.net,abc@gmail.com")
+        .assert()
+        .success();
 }
 
 #[test]
