@@ -1,14 +1,15 @@
 mod cli;
+mod preprocess;
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use numstat_parser::{parse_from_path, Numstat};
 use polars::frame::row::Row;
 use polars::prelude::*;
 use rayon::prelude::*;
+use std::collections::{BTreeMap, HashMap};
 use std::env;
 
-const DEFAULT_REMAP_EXT: [&str; 4] = ["tsx=>ts", "jsx=>js", "htm=>html", "yml=>yaml"];
-const DEFAULT_IGNORE_EXT: [&str; 4] = ["lock", "staging", "local", "license"];
+use crate::preprocess::preprocess;
 
 fn main() -> Result<()> {
     env::set_var("POLARS_FMT_TABLE_HIDE_COLUMN_DATA_TYPES", "1");
@@ -62,9 +63,20 @@ fn main() -> Result<()> {
     // Print the DataFrame
     log::debug!("{}\n", preprocess(df.clone(), &args).collect()?);
 
+    let mut heading = HashMap::new();
+    let mut query: BTreeMap<&str, DataFrame> = BTreeMap::new();
+
+    macro_rules! query {
+        ($name:literal, $title:literal, $expr:expr) => {
+            heading.insert($name, $title);
+            query.insert($name, $expr);
+        };
+    }
+
     // Query: data summary.
-    println!(
-        "Data summary: {}\n",
+    query!(
+        "summary",
+        "Summary",
         preprocess(df.clone(), &args)
             .select([
                 col("author_name").n_unique().alias("author_count"),
@@ -73,14 +85,15 @@ fn main() -> Result<()> {
                 col("extension").list().alias("extensions"),
                 col("added").sum(),
                 col("deleted").sum(),
-                col("date").max().alias("last commit")
+                col("date").max().alias("last commit"),
             ])
             .collect()?
     );
 
     // Query: How many lines of code were added per author?
-    println!(
-        "Commit by authors: {}\n",
+    query!(
+        "commit_by_author",
+        "Commit by author",
         preprocess(df.clone(), &args)
             .groupby([col("author_name")])
             .agg([col("commit").n_unique()])
@@ -88,18 +101,10 @@ fn main() -> Result<()> {
             .collect()?
     );
 
-    // Query: Commit by author by date, convert date to YYYY-MM
-    println!(
-        "Commit by author by date: {}\n",
-        preprocess(df.clone(), &args)
-            .groupby([col("author_name"), col("year_month")])
-            .agg([col("commit").n_unique()])
-            .sort_by_exprs(&[col("author_name"), col("commit")], [false, true], false)
-            .collect()?
-    );
-
-    println!(
-        "Total commit by months: {}\n",
+    // Query: Total commits by month
+    query!(
+        "commit_by_month",
+        "Commit by month",
         preprocess(df.clone(), &args)
             .groupby([col("year_month")])
             .agg([col("commit").n_unique()])
@@ -107,17 +112,21 @@ fn main() -> Result<()> {
             .collect()?
     );
 
-    println!(
-        "Commit by author: {}\n",
+    // Query: Commit by author by date, convert date to YYYY-MM
+    query!(
+        "commit_by_author_by_month",
+        "Commit by author by month",
         preprocess(df.clone(), &args)
-            .groupby([col("author_name")])
+            .groupby([col("author_name"), col("year_month")])
             .agg([col("commit").n_unique()])
-            .sort_by_exprs(&[col("commit")], [true], false)
+            .sort_by_exprs(&[col("author_name"), col("commit")], [false, true], false)
             .collect()?
     );
 
-    println!(
-        "Top languages by commit: {}\n",
+    // Query: Top languages
+    query!(
+        "top_languages",
+        "Top languages",
         preprocess(df.clone(), &args)
             .groupby([col("extension").alias("language")])
             .agg([col("commit").n_unique()])
@@ -126,149 +135,57 @@ fn main() -> Result<()> {
             .collect()?
     );
 
-    println!(
-        "Top commit by day of week: {}\n",
+    // Query: Top commit by weekday
+    query!(
+        "commit_by_weekday",
+        "Commit by weekday",
         preprocess(df.clone(), &args)
             .with_column(col("date").dt().weekday().alias("n"))
-            .with_column(col("date").dt().strftime("%A").alias("day_of_week"))
-            .groupby([col("n"), col("day_of_week")])
+            .with_column(col("date").dt().strftime("%A").alias("weekday"))
+            .groupby([col("n"), col("weekday")])
             .agg([col("commit").n_unique()])
             .sort_by_exprs(&[col("n")], [false], false)
             .collect()?
     );
 
-    Ok(())
-}
+    match args.output {
+        cli::Output::None => {
+            for (k, v) in query {
+                println!("{}: {}\n", heading.get(&k).unwrap_or(&k), v)
+            }
+        }
+        cli::Output::Json => {
+            use serde_json::{json, to_value, Value};
 
-fn preprocess(df: DataFrame, args: &cli::Cli) -> LazyFrame {
-    let df = df
-        .lazy()
-        .with_column(col("date").dt().strftime("%Y-%m").alias("year_month"));
+            let values = to_value(&query)?;
+            let mut out = json!({});
 
-    // Drop duplicates
-    let df = df.unique_stable(None, UniqueKeepStrategy::Last);
+            for (k, v) in values.as_object().unwrap().iter() {
+                let mut cols = json!({});
 
-    // Filter by year
-    let df = if !args.year.is_empty() {
-        df.filter(
-            col("date")
-                .dt()
-                .year()
-                .is_in(lit(Series::from_iter(args.year.clone()))),
-        )
-    } else {
-        df
-    };
+                for col in v["columns"].as_array().unwrap().iter() {
+                    let key = col["name"].as_str().unwrap();
 
-    // Filter by authors
-    let df = if !args.author.is_empty() {
-        df.filter(col("author_name").is_in(lit(Series::from_iter(args.author.clone()))))
-    } else {
-        df
-    };
+                    let values = match col["values"].as_array().unwrap() {
+                        values if values[0].is_object() => values
+                            .iter()
+                            .map(|v| v["values"].clone())
+                            .collect::<Vec<Value>>(),
+                        values => values.to_vec(),
+                    };
 
-    // Filter by ignore authors
-    let df = if !args.ignore_author.is_empty() {
-        df.filter(
-            col("author_name")
-                .is_in(lit(Series::from_iter(args.ignore_author.clone())))
-                .not(),
-        )
-    } else {
-        df
-    };
+                    cols[key] = Value::Array(values);
+                }
 
-    // Normalize extensions
-    let df = df
-        .with_column(col("extension").str().to_lowercase().alias("extension"))
-        .filter(
-            col("extension")
-                .is_in(lit(Series::from_iter(DEFAULT_IGNORE_EXT)))
-                .not(),
-        );
+                out[k] = serde_json::to_value(cols)?;
+            }
 
-    // Remap extensions using default
-    // Convert array to slice
-    let exts = &DEFAULT_REMAP_EXT
-        .iter()
-        .map(|s| s.to_string())
-        .collect::<Vec<String>>();
-    let df = modify_column(df, "extension", exts);
-
-    // Ignore extensions
-    let df = if !args.ignore_ext.is_empty() {
-        let exts = args.ignore_ext.clone();
-
-        df.filter(col("extension").is_in(lit(Series::from_iter(exts))).not())
-    } else {
-        df
-    };
-
-    // Remap the author name
-    let df = if !args.remap_name.is_empty() {
-        modify_column(df, "author_name", &args.remap_name)
-    } else {
-        df
-    };
-
-    // Remap the author email
-    let df = if !args.remap_email.is_empty() {
-        modify_column(df, "author_email", &args.remap_email)
-    } else {
-        df
-    };
-
-    // Remap the language (extension)
-
-    let df = if !args.remap_ext.is_empty() {
-        modify_column(df, "extension", &args.remap_ext.clone())
-    } else {
-        df
-    };
-
-    // Should cache the preprocessed to prevent reprocessing
-    df.cache()
-}
-
-fn modify_column(df: LazyFrame, col_name: &str, from_to: &[String]) -> LazyFrame {
-    // Replace the value of the author_name column
-    // Replace the value [from]=>[to] or [to]<=[from]
-    let remap = from_to
-        .iter()
-        .flat_map(|r| {
-            let (froms, to) = if r.contains("<=") {
-                let mut split = r.split("<=");
-                let to = split.next().unwrap();
-                let froms = split.next().unwrap();
-                (froms, to)
-            } else if r.contains("=>") {
-                let mut split = r.split("=>");
-                let froms = split.next().unwrap();
-                let to = split.next().unwrap();
-                (froms, to)
-            } else {
-                panic!("Invalid remap format: {}", r);
-            };
-
-            let froms = froms.split(',').collect::<Vec<_>>();
-            froms
-                .iter()
-                .map(|f| (f.to_string(), to.to_string()))
-                .collect::<Vec<_>>()
-        })
-        .collect::<Vec<(String, String)>>();
-
-    let mut df = df;
-
-    // Modify the column in place
-    for (from, to) in remap {
-        df = df.with_column(
-            when(col(col_name).str().contains(from))
-                .then(lit(to))
-                .otherwise(col(col_name))
-                .alias(col_name),
-        );
+            println!("{:#}", out);
+        }
+        _ => {
+            bail!("Not implemented yet.");
+        }
     }
 
-    df
+    Ok(())
 }

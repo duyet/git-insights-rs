@@ -31,6 +31,17 @@ pub struct Cli {
     /// Remap the extension. e.g. --remap-ext "tsx=>ts"
     #[arg(long)]
     pub remap_ext: Vec<String>,
+    /// Output format
+    #[arg(short, long, value_enum, default_value_t = Output::None)]
+    pub output: Output,
+}
+
+#[derive(clap::ValueEnum, Clone, Default)]
+pub enum Output {
+    #[default]
+    None,
+    Json,
+    Html,
 }
 
 // Parse the command line arguments
