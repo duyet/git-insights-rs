@@ -1,2 +1,3 @@
 [workspace]
 members = ['numstat-parser', 'insights-cli']
+resolver = "2"
