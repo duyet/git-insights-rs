@@ -10,7 +10,7 @@ anyhow = "1.0.75"
 chrono = "0.4.31"
 clap = { version = "4.4.4", features = ["derive"] }
 log = "0.4.20"
-rayon = "1.7.0"
+rayon = "1.8.0"
 regex = "1.9.5"
 tempfile = "3.8.0"
 
