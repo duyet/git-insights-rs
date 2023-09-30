@@ -11,7 +11,7 @@ anyhow = "1.0.75"
 chrono = "0.4.31"
 clap = { version = "4.4.6", features = ["derive"] }
 env_logger = "0.10.0"
-regex = "1.9.5"
+regex = "1.9.6"
 polars = { version = "0.33.2", features = ["sql", "lazy", "rows", "is_in", "fmt", "describe", "serde", "strings"] }
 rayon = "1.8.0"
 log = "0.4.20"
