@@ -128,7 +128,7 @@ fn modify_column(df: LazyFrame, col_name: &str, from_to: &[String]) -> LazyFrame
     // Modify the column in place
     for (from, to) in remap {
         df = df.with_column(
-            when(col(col_name).str().contains(from))
+            when(col(col_name).str().contains(lit(from), false))
                 .then(lit(to))
                 .otherwise(col(col_name))
                 .alias(col_name),

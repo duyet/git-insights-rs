@@ -81,8 +81,8 @@ fn main() -> Result<()> {
             .select([
                 col("author_name").n_unique().alias("author_count"),
                 col("commit").n_unique().alias("commit_count"),
-                col("author_name").list().alias("authors"),
-                col("extension").list().alias("extensions"),
+                col("author_name").list().0.alias("authors"),
+                col("extension").list().0.alias("extensions"),
                 col("added").sum(),
                 col("deleted").sum(),
                 col("date").max().alias("last commit"),
@@ -95,9 +95,9 @@ fn main() -> Result<()> {
         "commit_by_author",
         "Commit by author",
         preprocess(df.clone(), &args)
-            .groupby([col("author_name")])
+            .group_by([col("author_name")])
             .agg([col("commit").n_unique()])
-            .sort_by_exprs(&[col("commit")], [true], false)
+            .sort_by_exprs(&[col("commit")], [true], false, true)
             .collect()?
     );
 
@@ -106,9 +106,9 @@ fn main() -> Result<()> {
         "commit_by_month",
         "Commit by month",
         preprocess(df.clone(), &args)
-            .groupby([col("year_month")])
+            .group_by([col("year_month")])
             .agg([col("commit").n_unique()])
-            .sort_by_exprs(&[col("year_month")], [false], false)
+            .sort_by_exprs(&[col("year_month")], [false], false, true)
             .collect()?
     );
 
@@ -117,9 +117,14 @@ fn main() -> Result<()> {
         "commit_by_author_by_month",
         "Commit by author by month",
         preprocess(df.clone(), &args)
-            .groupby([col("author_name"), col("year_month")])
+            .group_by([col("author_name"), col("year_month")])
             .agg([col("commit").n_unique()])
-            .sort_by_exprs(&[col("author_name"), col("commit")], [false, true], false)
+            .sort_by_exprs(
+                &[col("author_name"), col("commit")],
+                [false, true],
+                false,
+                true
+            )
             .collect()?
     );
 
@@ -128,9 +133,9 @@ fn main() -> Result<()> {
         "top_languages",
         "Top languages",
         preprocess(df.clone(), &args)
-            .groupby([col("extension").alias("language")])
+            .group_by([col("extension").alias("language")])
             .agg([col("commit").n_unique()])
-            .sort_by_exprs(&[col("commit")], [true], false)
+            .sort_by_exprs(&[col("commit")], [true], false, true)
             .limit(5)
             .collect()?
     );
@@ -142,9 +147,9 @@ fn main() -> Result<()> {
         preprocess(df.clone(), &args)
             .with_column(col("date").dt().weekday().alias("n"))
             .with_column(col("date").dt().strftime("%A").alias("weekday"))
-            .groupby([col("n"), col("weekday")])
+            .group_by([col("n"), col("weekday")])
             .agg([col("commit").n_unique()])
-            .sort_by_exprs(&[col("n")], [false], false)
+            .sort_by_exprs(&[col("n")], [false], false, true)
             .collect()?
     );
 
