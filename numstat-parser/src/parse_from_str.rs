@@ -292,7 +292,7 @@ mod tests {
         assert_eq!(last.commit, "68a776b89c865a91a05047af6d8f2db2f03859d0");
         assert_eq!(last.author.name, "Duyet Le");
         assert_eq!(last.author.email, "me@duyet.net");
-        assert_eq!(last.date.to_rfc2822(), "Tue, 09 Aug 2022 20:56:49 +0700");
+        assert_eq!(last.date.to_rfc2822(), "Tue, 9 Aug 2022 20:56:49 +0700");
         assert_eq!(last.merges.len(), 0);
         assert_eq!(last.tags.len(), 0);
         assert_eq!(last.message, "docs: update README.md");
