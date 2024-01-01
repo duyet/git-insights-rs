@@ -15,7 +15,7 @@ regex = "1.10.2"
 polars = { version = "0.35.4", features = ["sql", "lazy", "rows", "is_in", "fmt", "describe", "serde", "strings"] }
 rayon = "1.8.0"
 log = "0.4.20"
-serde_json = "1.0.108"
+serde_json = "1.0.109"
 
 [dev-dependencies]
 assert_cmd = "2.0.12"
