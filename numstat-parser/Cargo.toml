@@ -17,4 +17,4 @@ tempfile = "3.9.0"
 [dev-dependencies]
 assert_cmd = "2.0.13"
 indoc = "2.0.4"
-predicates = "3.0.4"
+predicates = "3.1.0"
