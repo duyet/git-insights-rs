@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.79"
-chrono = "0.4.32"
+chrono = "0.4.33"
 clap = { version = "4.4.18", features = ["derive"] }
 log = "0.4.20"
 rayon = "1.8.1"
