@@ -10,7 +10,7 @@ numstat_parser = { path = "../numstat-parser" }
 anyhow = "1.0.79"
 chrono = "0.4.34"
 clap = { version = "4.5.0", features = ["derive"] }
-env_logger = "0.11.1"
+env_logger = "0.11.2"
 regex = "1.10.3"
 polars = { version = "0.37.0", features = ["sql", "lazy", "rows", "is_in", "fmt", "describe", "serde", "strings"] }
 rayon = "1.8.1"
