@@ -15,6 +15,6 @@ regex = "1.10.3"
 tempfile = "3.10.0"
 
 [dev-dependencies]
-assert_cmd = "2.0.13"
+assert_cmd = "2.0.14"
 indoc = "2.0.4"
 predicates = "3.1.0"
