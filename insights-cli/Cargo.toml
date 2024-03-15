@@ -9,7 +9,7 @@ edition = "2021"
 numstat_parser = { path = "../numstat-parser" }
 anyhow = "1.0.81"
 chrono = "0.4.35"
-clap = { version = "4.5.2", features = ["derive"] }
+clap = { version = "4.5.3", features = ["derive"] }
 env_logger = "0.11.3"
 regex = "1.10.3"
 polars = { version = "0.38.2", features = ["sql", "lazy", "rows", "is_in", "fmt", "describe", "serde", "strings"] }
