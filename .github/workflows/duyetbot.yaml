@@ -18,7 +18,7 @@ jobs:
       sender: ${{ github.event.sender.login }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: Swatinem/rust-cache@v2
 
       - if: ${{ startsWith(env.src_comment, '@duyetbot ') }}
