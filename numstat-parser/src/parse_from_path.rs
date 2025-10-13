@@ -80,9 +80,7 @@ pub fn parse_from_path(paths: &[PathBuf]) -> Result<Vec<crate::Numstat>> {
         Ok(paths
             .par_iter()
             .flat_map(|path| {
-                parse_from_path(&[path.to_path_buf()]).unwrap_or_else(|e| {
-                    panic!("Failed to parse path: {}, error: {}", path.display(), e)
-                })
+                parse_from_path(&[path.to_path_buf()]).ok().unwrap_or_default()
             })
             .collect::<Vec<crate::Numstat>>())
     }
