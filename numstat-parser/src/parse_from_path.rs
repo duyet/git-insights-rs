@@ -80,7 +80,9 @@ pub fn parse_from_path(paths: &[PathBuf]) -> Result<Vec<crate::Numstat>> {
         Ok(paths
             .par_iter()
             .flat_map(|path| {
-                parse_from_path(&[path.to_path_buf()]).ok().unwrap_or_default()
+                parse_from_path(&[path.to_path_buf()])
+                    .ok()
+                    .unwrap_or_default()
             })
             .collect::<Vec<crate::Numstat>>())
     }
