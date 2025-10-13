@@ -61,7 +61,7 @@ fn main() -> Result<()> {
         .rename("column_7", "deleted")?;
 
     // Print the DataFrame
-    log::debug!("{}\n", preprocess(df.clone(), &args).collect()?);
+    log::debug!("{}\n", preprocess(df.clone(), &args)?.collect()?);
 
     let mut heading = HashMap::new();
     let mut query: BTreeMap<&str, DataFrame> = BTreeMap::new();
@@ -77,7 +77,7 @@ fn main() -> Result<()> {
     query!(
         "summary",
         "Summary",
-        preprocess(df.clone(), &args)
+        preprocess(df.clone(), &args)?
             .select([
                 col("author_name").n_unique().alias("author_count"),
                 col("commit").n_unique().alias("commit_count"),
@@ -94,7 +94,7 @@ fn main() -> Result<()> {
     query!(
         "commit_by_author",
         "Commit by author",
-        preprocess(df.clone(), &args)
+        preprocess(df.clone(), &args)?
             .group_by([col("author_name")])
             .agg([col("commit").n_unique()])
             .sort_by_exprs(&[col("commit")], [true], false, true)
@@ -105,7 +105,7 @@ fn main() -> Result<()> {
     query!(
         "commit_by_month",
         "Commit by month",
-        preprocess(df.clone(), &args)
+        preprocess(df.clone(), &args)?
             .group_by([col("year_month")])
             .agg([col("commit").n_unique()])
             .sort_by_exprs(&[col("year_month")], [false], false, true)
@@ -116,7 +116,7 @@ fn main() -> Result<()> {
     query!(
         "commit_by_author_by_month",
         "Commit by author by month",
-        preprocess(df.clone(), &args)
+        preprocess(df.clone(), &args)?
             .group_by([col("author_name"), col("year_month")])
             .agg([col("commit").n_unique()])
             .sort_by_exprs(
@@ -132,7 +132,7 @@ fn main() -> Result<()> {
     query!(
         "top_languages",
         "Top languages",
-        preprocess(df.clone(), &args)
+        preprocess(df.clone(), &args)?
             .group_by([col("extension").alias("language")])
             .agg([col("commit").n_unique()])
             .sort_by_exprs(&[col("commit")], [true], false, true)
@@ -144,7 +144,7 @@ fn main() -> Result<()> {
     query!(
         "commit_by_weekday",
         "Commit by weekday",
-        preprocess(df.clone(), &args)
+        preprocess(df.clone(), &args)?
             .with_column(col("date").dt().weekday().alias("n"))
             .with_column(col("date").dt().strftime("%A").alias("weekday"))
             .group_by([col("n"), col("weekday")])

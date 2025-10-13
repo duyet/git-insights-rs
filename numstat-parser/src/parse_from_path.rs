@@ -28,9 +28,9 @@ pub fn parse_from_path(paths: &[PathBuf]) -> Result<Vec<crate::Numstat>> {
 
                     git_dirs
                         .par_iter()
-                        .map(|entry| {
+                        .filter_map(|entry| {
                             debug!("running git log on {}", entry.display());
-                            git::get_log(entry).unwrap()
+                            git::get_log(entry).ok()
                         })
                         .collect()
                 };
