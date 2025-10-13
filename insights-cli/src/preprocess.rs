@@ -101,16 +101,14 @@ fn modify_column(df: LazyFrame, col_name: &str, from_to: &[String]) -> LazyFrame
     let remap = from_to
         .iter()
         .flat_map(|r| {
+            // BUG-017 & BUG-018: Safe remap format parsing with split_once
             let (froms, to) = if r.contains("<=") {
-                let mut split = r.split("<=");
-                let to = split.next().unwrap();
-                let froms = split.next().unwrap();
-                (froms, to)
+                r.split_once("<=")
+                    .map(|(to, froms)| (froms, to))
+                    .unwrap_or_else(|| panic!("Invalid remap format: {}", r))
             } else if r.contains("=>") {
-                let mut split = r.split("=>");
-                let froms = split.next().unwrap();
-                let to = split.next().unwrap();
-                (froms, to)
+                r.split_once("=>")
+                    .unwrap_or_else(|| panic!("Invalid remap format: {}", r))
             } else {
                 panic!("Invalid remap format: {}", r);
             };
