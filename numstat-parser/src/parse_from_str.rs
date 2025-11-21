@@ -1,7 +1,17 @@
 use anyhow::{anyhow, Context, Result};
 use chrono::DateTime;
+use lazy_static::lazy_static;
 use log::debug;
 use rayon::prelude::*;
+use regex::Regex;
+
+lazy_static! {
+    static ref BRANCH_TAG_RE: Regex = Regex::new(r"\((.+)\)").unwrap();
+    static ref AUTHOR_RE: Regex = Regex::new(r"Author: (?P<name>.*) <(?P<email>.*)>").unwrap();
+    static ref DATE_RE: Regex = Regex::new(r"Date:\s+(?P<date>.*)").unwrap();
+    static ref MERGE_RE: Regex = Regex::new(r"Merge:\s+(?P<merges>.*)").unwrap();
+    static ref FILE_STAT_RE: Regex = Regex::new(r"(\d+)\s+(\d+)\s+(.*)").unwrap();
+}
 
 /// Parse git log --numstat content
 ///
@@ -41,7 +51,7 @@ pub fn parse_from_str(s: &str) -> Result<Vec<crate::Numstat>> {
 
     Ok(blocks
         .par_iter()
-        .map(|block| parse_block(block).unwrap())
+        .filter_map(|block| parse_block(block).ok())
         .collect())
 }
 
@@ -60,7 +70,10 @@ fn parse_block(block: &str) -> Result<crate::Numstat> {
 
         // Parse commit
         if line.starts_with("commit ") {
-            let commit = line.split(' ').nth(1).unwrap();
+            let commit = line
+                .split(' ')
+                .nth(1)
+                .ok_or_else(|| anyhow!("Invalid commit line: {}", line))?;
             numstat.commit = commit.to_string();
             debug!("commit: {}", commit);
 
@@ -71,8 +84,7 @@ fn parse_block(block: &str) -> Result<crate::Numstat> {
             }
 
             // commit bbb7c8e78f07cd06dc015c7139cb174285cd6a8c (tag: v1.0.24+demo, HEAD -> master, origin/master)
-            let brand_tag_re = regex::Regex::new(r"\((.+)\)").unwrap();
-            if let Some(brand_tag) = brand_tag_re.captures(line) {
+            if let Some(brand_tag) = BRANCH_TAG_RE.captures(line) {
                 let brand_or_tag = brand_tag.get(1).unwrap().as_str();
                 numstat.tags = brand_or_tag
                     .split(',')
@@ -95,8 +107,7 @@ fn parse_block(block: &str) -> Result<crate::Numstat> {
 
         // Parse author: Author: Duyet Le <me@duyet.net>
         // TODO: Parse multiple authors
-        let author_re = regex::Regex::new(r"Author: (?P<name>.*) <(?P<email>.*)>").unwrap();
-        if let Some(captures) = author_re.captures(line) {
+        if let Some(captures) = AUTHOR_RE.captures(line) {
             numstat.author.full = line.trim_start_matches("Author: ").to_string();
             numstat.author.name = captures.name("name").unwrap().as_str().to_string();
             numstat.author.email = captures.name("email").unwrap().as_str().to_string();
@@ -104,8 +115,7 @@ fn parse_block(block: &str) -> Result<crate::Numstat> {
         }
 
         // Parse date
-        let date_re = regex::Regex::new(r"Date:\s+(?P<date>.*)").unwrap();
-        if let Some(captures) = date_re.captures(line) {
+        if let Some(captures) = DATE_RE.captures(line) {
             // TODO: there are a bug that the commit message contains `Date: `
             // To workaround, we will skip if the date is already parsed
             if numstat.date != default_date {
@@ -121,8 +131,7 @@ fn parse_block(block: &str) -> Result<crate::Numstat> {
         }
 
         // Merges
-        let merge_re = regex::Regex::new(r"Merge:\s+(?P<merges>.*)").unwrap();
-        if let Some(captures) = merge_re.captures(line) {
+        if let Some(captures) = MERGE_RE.captures(line) {
             let merges = captures.name("merges").unwrap().as_str();
             numstat.merges = merges.split(' ').map(|s| s.to_string()).collect();
             continue;
@@ -138,10 +147,8 @@ fn parse_block(block: &str) -> Result<crate::Numstat> {
         // Parse stats using regex
         // Each line contains two \t separated numbers and a path
         // 20       2       config/app_log/summary.ts
-        let file_stat_re = regex::Regex::new(r"(\d+)\s+(\d+)\s+(.*)")?;
-
-        if file_stat_re.is_match(line) {
-            let captures = file_stat_re.captures(line).unwrap();
+        if FILE_STAT_RE.is_match(line) {
+            let captures = FILE_STAT_RE.captures(line).unwrap();
 
             let added = captures.get(1).unwrap().as_str().parse::<u32>()?;
             let deleted = captures.get(2).unwrap().as_str().parse::<u32>()?;
