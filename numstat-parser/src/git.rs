@@ -32,7 +32,6 @@ pub fn get_log(path: &PathBuf) -> Result<String> {
         .arg("--all")
         .arg("--numstat")
         .arg("--date=rfc")
-        .arg(path)
         .current_dir(path)
         .output()
         .with_context(|| format!("Running command: `{}`", cmd))?;
