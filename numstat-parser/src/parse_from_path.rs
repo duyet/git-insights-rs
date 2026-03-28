@@ -6,6 +6,15 @@ use std::path::PathBuf;
 use crate::git;
 use crate::parse_from_str;
 
+// BUG-023: Helper function for enhanced Git URL validation
+fn is_valid_git_url(url: &str) -> bool {
+    url.starts_with("https://github.com")
+        || url.starts_with("https://gitlab.com")
+        || url.starts_with("git@github.com:")
+        || url.starts_with("git@gitlab.com:")
+        || url.ends_with(".git")
+}
+
 pub fn parse_from_path(paths: &[PathBuf]) -> Result<Vec<crate::Numstat>> {
     if paths.len() == 1 {
         let path = &paths[0];
@@ -15,22 +24,25 @@ pub fn parse_from_path(paths: &[PathBuf]) -> Result<Vec<crate::Numstat>> {
                 let dirs = if path.join(".git").exists() {
                     vec![git::get_log(path)?]
                 } else {
+                    // BUG-020: Safely iterate directory entries
                     let git_dirs = std::fs::read_dir(path)?
                         .filter_map(|entry| {
-                            let path = entry.expect("could not parse path").path();
-                            if path.join(".git").exists() {
-                                Some(path)
-                            } else {
-                                None
-                            }
+                            entry.ok().and_then(|e| {
+                                let path = e.path();
+                                if path.join(".git").exists() {
+                                    Some(path)
+                                } else {
+                                    None
+                                }
+                            })
                         })
                         .collect::<Vec<_>>();
 
                     git_dirs
                         .par_iter()
-                        .map(|entry| {
+                        .filter_map(|entry| {
                             debug!("running git log on {}", entry.display());
-                            git::get_log(entry).unwrap()
+                            git::get_log(entry).ok()
                         })
                         .collect()
                 };
@@ -57,8 +69,8 @@ pub fn parse_from_path(paths: &[PathBuf]) -> Result<Vec<crate::Numstat>> {
                 parse_from_str(&output)
             }
 
-            path if path.to_string_lossy().starts_with("https://github.com") => {
-                // Github URL
+            path if is_valid_git_url(&path.to_string_lossy()) => {
+                // BUG-023: Enhanced Git URL validation
                 let url = path.to_string_lossy();
 
                 // Tempdir to clone

@@ -165,24 +165,31 @@ fn main() -> Result<()> {
             let values = to_value(&query)?;
             let mut out = json!({});
 
-            for (k, v) in values.as_object().unwrap().iter() {
-                let mut cols = json!({});
+            // BUG-019: Safe JSON object access with pattern matching
+            if let Some(obj) = values.as_object() {
+                for (k, v) in obj.iter() {
+                    let mut cols = json!({});
 
-                for col in v["columns"].as_array().unwrap().iter() {
-                    let key = col["name"].as_str().unwrap();
+                    if let Some(columns) = v["columns"].as_array() {
+                        for col in columns.iter() {
+                            if let Some(key) = col["name"].as_str() {
+                                // BUG-024: Safe array access with bounds checking
+                                let values = match col["values"].as_array() {
+                                    Some(vals) if !vals.is_empty() && vals[0].is_object() => vals
+                                        .iter()
+                                        .map(|v| v["values"].clone())
+                                        .collect::<Vec<Value>>(),
+                                    Some(vals) => vals.to_vec(),
+                                    None => vec![],
+                                };
 
-                    let values = match col["values"].as_array().unwrap() {
-                        values if values[0].is_object() => values
-                            .iter()
-                            .map(|v| v["values"].clone())
-                            .collect::<Vec<Value>>(),
-                        values => values.to_vec(),
-                    };
+                                cols[key] = Value::Array(values);
+                            }
+                        }
+                    }
 
-                    cols[key] = Value::Array(values);
+                    out[k] = serde_json::to_value(cols)?;
                 }
-
-                out[k] = serde_json::to_value(cols)?;
             }
 
             println!("{:#}", out);
