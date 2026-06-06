@@ -70,7 +70,10 @@ fn parse_block(block: &str) -> Result<crate::Numstat> {
 
         // Parse commit
         if line.starts_with("commit ") {
-            let commit = line.split(' ').nth(1).unwrap();
+            let commit = line
+                .split(' ')
+                .nth(1)
+                .ok_or_else(|| anyhow!("Invalid commit line: {}", line))?;
             numstat.commit = commit.to_string();
             debug!("commit: {}", commit);
 
