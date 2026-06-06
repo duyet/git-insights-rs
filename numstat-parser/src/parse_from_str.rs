@@ -74,18 +74,22 @@ fn parse_block(block: &str) -> Result<crate::Numstat> {
                 .split(' ')
                 .nth(1)
                 .ok_or_else(|| anyhow!("Invalid commit line: {}", line))?;
-            numstat.commit = commit.to_string();
-            debug!("commit: {}", commit);
 
-            // Bug
+            // BUG-022: Check commit length before setting field
             if commit.len() < 15 {
+                debug!("Skipping invalid commit: {} (length < 15)", commit);
                 debug!("{}", block);
                 break;
             }
 
+            numstat.commit = commit.to_string();
+            debug!("commit: {}", commit);
+
             // commit bbb7c8e78f07cd06dc015c7139cb174285cd6a8c (tag: v1.0.24+demo, HEAD -> master, origin/master)
-            if let Some(brand_tag) = BRANCH_TAG_RE.captures(line) {
-                let brand_or_tag = brand_tag.get(1).unwrap().as_str();
+            // BUG-012: Handle missing capture group safely
+            let branch_tag_re = regex::Regex::new(r"\((.+)\)").unwrap();
+            if let Some(brand_tag) = branch_tag_re.captures(line).and_then(|c| c.get(1)) {
+                let brand_or_tag = brand_tag.as_str();
                 numstat.tags = brand_or_tag
                     .split(',')
                     .map(|s| s.trim())
@@ -107,55 +111,80 @@ fn parse_block(block: &str) -> Result<crate::Numstat> {
 
         // Parse author: Author: Duyet Le <me@duyet.net>
         // TODO: Parse multiple authors
-        if let Some(captures) = AUTHOR_RE.captures(line) {
+        // BUG-013: Handle missing captures gracefully
+        let author_re = regex::Regex::new(r"Author: (?P<name>.*) <(?P<email>.*)>").unwrap();
+        if let Some(captures) = author_re.captures(line) {
             numstat.author.full = line.trim_start_matches("Author: ").to_string();
-            numstat.author.name = captures.name("name").unwrap().as_str().to_string();
-            numstat.author.email = captures.name("email").unwrap().as_str().to_string();
+            numstat.author.name = captures
+                .name("name")
+                .map(|m| m.as_str().to_string())
+                .unwrap_or_else(|| "Unknown".to_string());
+            numstat.author.email = captures
+                .name("email")
+                .map(|m| m.as_str().to_string())
+                .unwrap_or_else(|| "unknown@example.com".to_string());
             continue;
         }
 
         // Parse date
-        if let Some(captures) = DATE_RE.captures(line) {
+        // BUG-014: Handle missing date capture gracefully
+        let date_re = regex::Regex::new(r"Date:\s+(?P<date>.*)").unwrap();
+        if let Some(captures) = date_re.captures(line) {
             // TODO: there are a bug that the commit message contains `Date: `
             // To workaround, we will skip if the date is already parsed
             if numstat.date != default_date {
                 continue;
             }
 
-            let date = captures.name("date").unwrap().as_str().to_string();
-
-            numstat.date = DateTime::parse_from_rfc2822(&date)
-                .with_context(|| format!("Parsing block `{}`", block))
-                .with_context(|| format!("Parsing date `{}`", date))?;
+            if let Some(date_match) = captures.name("date") {
+                let date = date_match.as_str();
+                numstat.date = DateTime::parse_from_rfc2822(date)
+                    .with_context(|| format!("Parsing block `{}`", block))
+                    .with_context(|| format!("Parsing date `{}`", date))?;
+            }
             continue;
         }
 
         // Merges
-        if let Some(captures) = MERGE_RE.captures(line) {
-            let merges = captures.name("merges").unwrap().as_str();
-            numstat.merges = merges.split(' ').map(|s| s.to_string()).collect();
+        let merge_re = regex::Regex::new(r"Merge:\s+(?P<merges>.*)").unwrap();
+        if let Some(captures) = merge_re.captures(line) {
+            if let Some(merges) = captures.name("merges") {
+                numstat.merges = merges.as_str().split(' ').map(|s| s.to_string()).collect();
+            }
             continue;
         }
 
         // Parse message
         // Message can be multiple lines
+        // BUG-026: Preserve line breaks in commit messages
         if line.starts_with("    ") {
             numstat.message.push_str(line.trim());
+            numstat.message.push('\n');
             continue;
         }
 
         // Parse stats using regex
         // Each line contains two \t separated numbers and a path
         // 20       2       config/app_log/summary.ts
-        if FILE_STAT_RE.is_match(line) {
-            let captures = FILE_STAT_RE.captures(line).unwrap();
-
-            let added = captures.get(1).unwrap().as_str().parse::<u32>()?;
-            let deleted = captures.get(2).unwrap().as_str().parse::<u32>()?;
-            let path = captures.get(3).unwrap().as_str().to_string();
+        // BUG-015 & BUG-016: Handle file stats regex captures safely
+        let file_stat_re = regex::Regex::new(r"(\d+)\s+(\d+)\s+(.*)").unwrap();
+        if let Some(captures) = file_stat_re.captures(line) {
+            let added = captures
+                .get(1)
+                .and_then(|m| m.as_str().parse::<u32>().ok())
+                .unwrap_or(0);
+            let deleted = captures
+                .get(2)
+                .and_then(|m| m.as_str().parse::<u32>().ok())
+                .unwrap_or(0);
+            let path = captures
+                .get(3)
+                .map(|m| m.as_str().to_string())
+                .unwrap_or_else(|| "unknown".to_string());
 
             // Parse extension
-            let extension = path.split('.').last().unwrap_or_default().to_string();
+            // BUG-025: Use explicit default for extension parsing
+            let extension = path.split('.').next_back().unwrap_or("unknown").to_string();
             // .github/workflows/{ci.yaml => rust-test.yaml}
             let extension = extension.to_lowercase().trim_end_matches('}').to_string();
 
@@ -265,7 +294,7 @@ mod tests {
         assert_eq!(first.merges, vec!["32e30ab", "bbb7c8e"]);
         assert_eq!(first.tags.len(), 0);
         assert_eq!(first.branches, vec!["origin/master", "origin/HEAD"]);
-        assert_eq!(first.message, "Merge pull request #42 from duyet/renovate/all-minor-patchchore(deps): update all non-major dependencies");
+        assert_eq!(first.message, "Merge pull request #42 from duyet/renovate/all-minor-patch\nchore(deps): update all non-major dependencies\n");
         assert_eq!(first.stats.len(), 0);
 
         // Parse tags and branches
@@ -302,7 +331,7 @@ mod tests {
         assert_eq!(last.date.to_rfc2822(), "Tue, 9 Aug 2022 20:56:49 +0700");
         assert_eq!(last.merges.len(), 0);
         assert_eq!(last.tags.len(), 0);
-        assert_eq!(last.message, "docs: update README.md");
+        assert_eq!(last.message, "docs: update README.md\n");
         assert_eq!(last.stats.len(), 4);
         assert_eq!(last.stats[0].added, 53);
         assert_eq!(last.stats[0].deleted, 5);
