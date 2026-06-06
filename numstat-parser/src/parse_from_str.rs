@@ -41,7 +41,7 @@ pub fn parse_from_str(s: &str) -> Result<Vec<crate::Numstat>> {
 
     Ok(blocks
         .par_iter()
-        .map(|block| parse_block(block).unwrap())
+        .filter_map(|block| parse_block(block).ok())
         .collect())
 }
 
