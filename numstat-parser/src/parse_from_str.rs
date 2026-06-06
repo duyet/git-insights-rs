@@ -1,7 +1,17 @@
 use anyhow::{anyhow, Context, Result};
 use chrono::DateTime;
+use lazy_static::lazy_static;
 use log::debug;
 use rayon::prelude::*;
+use regex::Regex;
+
+lazy_static! {
+    static ref BRANCH_TAG_RE: Regex = Regex::new(r"\((.+)\)").unwrap();
+    static ref AUTHOR_RE: Regex = Regex::new(r"Author: (?P<name>.*) <(?P<email>.*)>").unwrap();
+    static ref DATE_RE: Regex = Regex::new(r"Date:\s+(?P<date>.*)").unwrap();
+    static ref MERGE_RE: Regex = Regex::new(r"Merge:\s+(?P<merges>.*)").unwrap();
+    static ref FILE_STAT_RE: Regex = Regex::new(r"(\d+)\s+(\d+)\s+(.*)").unwrap();
+}
 
 /// Parse git log --numstat content
 ///
